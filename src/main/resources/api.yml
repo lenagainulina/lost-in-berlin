@@ -17,7 +17,7 @@ securityDefinitions:
 produces:
 - application/json
 paths:
-  /business:
+  /businesses:
     get:
       summary: Existing business profiles
       description: The endpoint returns information about business profiles available at a given location.
@@ -32,44 +32,83 @@ paths:
       security:
       - token: []
       tags:
-      - business
+      - businesses
       responses:
         "200":
           description: An array of profiles
           schema:
             type: array
-            profiles:
+            items:
               $ref: '#/definitions/Business'
         default:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-
     post:
       summary: Adds a new business profile
       description: The endpoint sends details of business profile provided during registration, containing content of the following fields: first name, last name, e-mail, phone, service location, short service description and an image.
-        The response includes the result of the operation.
-      requestBody:
-        content:
-          application/json:     # Media type
-            schema:             # Request body contents
-              $ref: '#/components/schemas/Business'   # Reference to an object
-            examples:    # Child of media type
-              Ada:   # Example 1
-                value:
-                  firstName: Ada
-                  lastName: Polkanova
-                  eMail: dogs4fun@dogmail.com
-                  phone: +49 177 77777777
-                  serviceLocation: Berlin
-                  description: Hi, I'm Ada, the dog.
-                  photo: image
+                     The response includes the result of the operation.
+      consumes:
+      - application/json # Media type
+      produces:
+      - application/json # Media type
+      parameters:
+      - name: business
+          in: body
+          description: business entity
+          required: true
+          schema:  # Request body contents
+            $ref: '#/components/schemas/Business' # Reference to an object
+          examples:    # Child of media type
+            Ada:   # Example 1
+              value:
+                firstName: Ada
+                lastName: Polkanova
+                eMail: dogs4fun@dogmail.com
+                phone: +49 177 77777777
+                serviceLocation: Berlin
+                description: Hi, I'm Ada, the dog.
+                photo: image
       responses:
         "200":
           description: Result of the operation
           schema:
             type: long
 
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /business/{business_id}:
+    get:
+      summary: Fetch a business profile
+      description: The endpoint returns information about a business profile with a given id.
+      The response includes the name and other details about the business.
+      parameters:
+      - name: id
+        in: url
+        description: Profile id
+        required: true
+        type: string
+      security:
+      - token: []
+      tags:
+      - business profile
+      responses:
+        "200":
+          description:  Profile fields
+          schema:
+            type: json
+            profile:
+              $ref: '#/definitions/Business'
+        "403":
+          description: Unauthorized for the current operation
+          schema:
+            $ref: '#/definitions/Error'
+        "404":
+          description: Profile not found
+          schema:
+            $ref: '#/definitions/Error'
         default:
           description: Unexpected error
           schema:
@@ -99,178 +138,14 @@ paths:
           description: Result of the operation
           schema:
             type: long
-
-        "403":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/Error'
-
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
-
-  /business/{id}:
-    get:
-      summary: Fetch a business profile
-      description: The endpoint returns information about a business profile with a given id.
-      The response includes the name and other details about the business.
-      parameters:
-      - name: id
-        in: url
-        description: Profile id
-        required: true
-        type: string
-      security:
-      - token: []
-      tags:
-      - business profile
-      responses:
-        "200":
-          description:  Profile fields
-          schema:
-            type: json
-            profile:
-              $ref: '#/definitions/Business'
-        "403":
-          description: Unauthorized for the current operation
-          schema:
-            $ref: '#/definitions/Error'
-        "404":
-          description: Profile not found
-          schema:
-            $ref: '#/definitions/Error'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
-/business:
-  get:
-    summary: Existing business profiles
-    description: The endpoint returns information about business profiles available at a given location.
-    The response includes the name and other details about each business, and lists the profiles
-    in the proper display order.
-    parameters:
-    - name: location
-      in: query
-      description: Given location.
-      required: true
-      type: string
-    security:
-    - token: []
-    tags:
-    - business
-    responses:
-      "200":
-        description: An array of profiles
-        schema:
-          type: array
-          profiles:
-            $ref: '#/definitions/Business'
-      default:
-        description: Unexpected error
-        schema:
-          $ref: '#/definitions/Error'
-
-  post:
-    summary: Adds a new business profile
-    description: The endpoint sends details of business profile provided during registration, containing content of the following fields: first name, last name, e-mail, phone, service location, short service description and an image.
-                   The response includes the result of the operation.
-    requestBody:
-      content:
-        application/json:     # Media type
-          schema:             # Request body contents
-            $ref: '#/components/schemas/Business'   # Reference to an object
-          examples:    # Child of media type
-            Ada:   # Example 1
-              value:
-                firstName: Ada
-                lastName: Polkanova
-                eMail: dogs4fun@dogmail.com
-                phone: +49 177 77777777
-                serviceLocation: Berlin
-                description: Hi, I'm Ada, the dog.
-                photo: image
-    responses:
-      "200":
-        description: Result of the operation
-        schema:
-          type: long
-
-      default:
-        description: Unexpected error
-        schema:
-          $ref: '#/definitions/Error'
-  put:
-    summary: Updates a business profile
-    description: The endpoint updates details of business profile previously retrieved from the database, containing content of the following fields: id, first name, last name, e-mail, phone, service location, short service description and an image.
-                   The response includes the result of the operation.
-    requestBody:
-      content:
-        application/json:     # Media type
-          schema:             # Request body contents
-            $ref: '#/components/schemas/Business'   # Reference to an object
-          examples:    # Child of media type
-            Ada:   # Example 1
-              value:
-                id: 10
-                firstName: Ada
-                lastName: Polkanova
-                eMail: dogs4fun@dogmail.com
-                phone: +49 177 77777777
-                serviceLocation: Berlin
-                description: Hi, I'm Ada, the dog.
-                photo: image
-    responses:
-      "200":
-        description: Result of the operation
-        schema:
-          type: long
-
-      "403":
-        description: Unauthorized
-        schema:
-          $ref: '#/definitions/Error'
-
-      default:
-        description: Unexpected error
-        schema:
-          $ref: '#/definitions/Error'
-
-  /business/{id}:
-    get:
-      summary: Fetch a business profile
-      description: The endpoint returns information about a business profile with a given id.
-      The response includes the name and other details about the business.
-      parameters:
-      - name: id
-        in: url
-        description: Profile id
-        required: true
-        type: string
-      security:
-      - token: []
-      tags:
-      - business profile
-      responses:
-        "200":
-          description:  Profile fields
-          schema:
-            type: json
-            profile:
-              $ref: '#/definitions/Business'
-        "403":
-          description: Unauthorized for the current operation
-          schema:
-            $ref: '#/definitions/Error'
-        "404":
-          description: Profile not found
-          schema:
-            $ref: '#/definitions/Error'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
+          "403":
+            description: Unauthorized
+            schema:
+              $ref: '#/definitions/Error'
+          default:
+            description: Unexpected error
+            schema:
+              $ref: '#/definitions/Error'
     /orders:
       get:
         summary: Existing orders
@@ -291,32 +166,37 @@ paths:
             description: An array of orders
             schema:
               type: array
-              orders:
+              items:
                 $ref: '#/definitions/Order'
           default:
             description: Unexpected error
             schema:
               $ref: '#/definitions/Error'
-
       post:
         summary: Adds a new order
-        description: The endpoint sends details of an order provided by the client, containing content of the following fields: name, phone number, e-mail, date, time, number of participants and additional order information.
+        description: The endpoint sends details of an order provided by the client, containing content of the following fields: name, phone number, e-mail, date, time, number of participants, additional order information and order status.
                        The response includes the result of the operation.
-        requestBody:
-          content:
-            application/json:     # Media type
-              schema:             # Request body contents
-                $ref: '#/components/schemas/Order'   # Reference to an object
-              examples:    # Child of media type
-                Lena:   # Example 1
-                  value:
-                    name: Lena
-                    phone: +49 176 68558497
-                    eMail: aoneko@gmx.de
-                    date: 27.09.2018
-                    time: 15:00-20:00
-                    numberParticipants: 1
-                    description: Hi, I want a dog sled tour in Berlin.
+        consumes:
+        - application/json # Media type
+        produces:
+        - application/json # Media type
+        parameters:
+        - name: order
+            in: body
+            description: order entity
+            required: true
+            schema:  # Request body contents
+              $ref: '#/components/schemas/Order' # Reference to an object
+            examples:    # Child of media type
+              Lena:   # Example 1
+                value:
+                  name: Lena
+                  phone: +49 176 68558497
+                  eMail: aoneko@gmx.de
+                  date: 27.09.2018
+                  time: 15:00-20:00
+                  numberParticipants: 1
+                  description: Hi, I want a dog sled tour in Berlin.
         responses:
           "200":
             description: Result of the operation
@@ -327,8 +207,7 @@ paths:
             description: Unexpected error
             schema:
               $ref: '#/definitions/Error'
-
-      /order/{id}:
+      /order/{order_id}:
         get:
           summary: Fetch an order
           description: The endpoint returns information about an order with a given id.
@@ -362,11 +241,10 @@ paths:
               description: Unexpected error
               schema:
                 $ref: '#/definitions/Error'
-      /status/{id}:
-        get:
-          summary: Return current order status
-          description: The endpoint returns current status of an order with a given id.
-          The response includes the status string.
+        put:
+          summary: Updates current order status
+          description: The endpoint updates current status of an order with a given id.
+          The response includes the result of the operation.
           parameters:
           - name: id
             in: url
@@ -377,6 +255,10 @@ paths:
           - token: []
           tags:
           - order status
+          requestBody:
+            content:
+              application/text:     # Media type
+                examples: pending
           responses:
             "200":
               description:  Order status
@@ -386,45 +268,10 @@ paths:
               description: Unauthorized for the current operation
               schema:
                 $ref: '#/definitions/Error'
-            "404":
-              description: Order not found
-              schema:
-                $ref: '#/definitions/Error'
             default:
               description: Unexpected error
               schema:
                 $ref: '#/definitions/Error'
-          put:
-            summary: Updates current order status
-            description: The endpoint updates current status of an order with a given id.
-            The response includes the result of the operation.
-            parameters:
-            - name: id
-              in: url
-              description: Order id
-              required: true
-              type: string
-            security:
-            - token: []
-            tags:
-            - order status
-            requestBody:
-              content:
-                application/text:     # Media type
-                  examples: pending
-            responses:
-              "200":
-                description:  Order status
-                schema:
-                  type: string
-              "403":
-                description: Unauthorized for the current operation
-                schema:
-                  $ref: '#/definitions/Error'
-              default:
-                description: Unexpected error
-                schema:
-                  $ref: '#/definitions/Error'
 definitions:
   Business:
     properties:
@@ -454,7 +301,7 @@ definitions:
         description: Image representing the business.
   BusinessList:
     properties:
-      businesses:
+      items:
         description: Contains the list of businesses
         type: array
         businesses:
@@ -464,6 +311,9 @@ definitions:
       id:
         type: string
         description: Unique identifier representing a specific order.
+      status:
+        type: string
+        description: Current status of an order.
       name:
         type: string
         description: Client's name.
@@ -487,7 +337,7 @@ definitions:
         description: Description of an order.
     OrderList:
       properties:
-        orders:
+        items:
           description: Contains the list of orders
           type: array
           orders:

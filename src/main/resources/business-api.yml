@@ -58,7 +58,7 @@ paths:
           description: business entity
           required: true
           schema:  # Request body contents
-            $ref: '#/components/schemas/Business' # Reference to an object
+            $ref: '#/definitions/Business' # Reference to an object
           examples:    # Child of media type
             Ada:   # Example 1
               value:
@@ -121,7 +121,7 @@ paths:
         content:
           application/json:     # Media type
             schema:             # Request body contents
-              $ref: '#/components/schemas/Business'   # Reference to an object
+              $ref: '#/definitions/Business'   # Reference to an object
             examples:    # Child of media type
               Ada:   # Example 1
                 value:
@@ -153,7 +153,7 @@ paths:
   definitions:
     Business:
       properties:
-        id:
+        business_id:
           type: string
           description: Unique identifier representing a specific business.
         firstName:

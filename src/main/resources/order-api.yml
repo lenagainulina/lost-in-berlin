@@ -23,7 +23,7 @@ paths:
       description: The endpoint returns information about orders assigned to this business.
       The response includes the order details, and lists the orders according to their execution time.
       parameters:
-      - name: business id
+      - name: order id
         in: query
         description: id of the current business
         required: true
@@ -112,6 +112,8 @@ paths:
             description: Unexpected error
             schema:
               $ref: '#/definitions/Error'
+
+      /order/{order_id}/status:
       put:
         summary: Updates current order status
         description: The endpoint updates current status of the order with given id.
@@ -121,6 +123,10 @@ paths:
           in: url
           description: Order id
           required: true
+          type: string
+        - name: status
+          in: url
+          description: Order status
           type: string
         security:
         - token: []
@@ -143,6 +149,10 @@ paths:
             description: Order not found
             schema:
               $ref: '#/definitions/Error'
+          "409":
+            description: Conflict: the order has been already taken by another business
+            schema:
+              $ref: '#/definitions/Error'
           default:
             description: Unexpected error
             schema:
@@ -150,9 +160,12 @@ paths:
 definitions:
   Order:
     properties:
-      id:
+      order_id:
         type: string
         description: Unique identifier representing a specific order.
+      business_id:
+        type: string
+        description: Unique identifier representing a business, which accepted the order.
       status:
         type: string
         description: Current status of an order.

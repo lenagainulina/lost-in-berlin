@@ -1,0 +1,195 @@
+info:
+  title: LostInBerlin API
+  description: Move your app forward with the LostInBerlin API
+  version: "1.0.0"
+# the domain of the service
+host: lost-in-berlin.com
+# array of all schemes that your API supports
+schemes:
+- https
+# will be prefixed to all paths
+basePath: /api/v1
+securityDefinitions:
+  apikey:
+    type: token
+    name: server_token
+    in: header
+produces:
+- application/json
+paths:
+  /orders:
+    get:
+      summary: Existing orders
+      description: The endpoint returns information about orders assigned to this business.
+      The response includes the order details, and lists the orders according to their execution time.
+      parameters:
+      - name: business id
+        in: query
+        description: id of the current business
+        required: true
+        type: string
+      security:
+      - token: []
+      tags:
+      - orders
+      responses:
+        "200":
+          description: An array of orders
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Order'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Adds a new order
+      description: The endpoint sends details of an order provided by the client, containing content of the following fields: name, phone number, e-mail, date, time, number of participants, additional order information and order status.
+                     The response includes the result of the operation.
+      consumes:
+      - application/json # Media type
+      produces:
+      - application/json # Media type
+      parameters:
+      - name: order
+          in: body
+          description: order entity
+          required: true
+          schema:  # Request body contents
+            $ref: '#/components/schemas/Order' # Reference to an object
+          examples:    # Child of media type
+            Lena:   # Example 1
+              value:
+                name: Lena
+                phone: +49 176 68558497
+                eMail: aoneko@gmx.de
+                date: 27.09.2018
+                time: 15:00-20:00
+                numberParticipants: 1
+                description: Hi, I want a dog sled tour in Berlin.
+      responses:
+        "200":
+          description: Result of the operation
+          schema:
+            type: long
+
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    /order/{order_id}:
+      get:
+        summary: Fetch an order
+        description: The endpoint returns information about an order with a given id.
+        The response includes the name, date and status of the order.
+        parameters:
+        - name: order_id
+          in: url
+          description: Order id
+          required: true
+          type: string
+        security:
+        - token: []
+        tags:
+        - order details
+        responses:
+          "200":
+            description:  Order fields: name, date and status
+            schema:
+              type: json
+              order:
+                $ref: '#/definitions/Order'
+          "403":
+            description: Unauthorized for the current operation
+            schema:
+              $ref: '#/definitions/Error'
+          "404":
+            description: Order not found
+            schema:
+              $ref: '#/definitions/Error'
+          default:
+            description: Unexpected error
+            schema:
+              $ref: '#/definitions/Error'
+      put:
+        summary: Updates current order status
+        description: The endpoint updates current status of the order with given id.
+        The response includes the result of the operation.
+        parameters:
+        - name: id
+          in: url
+          description: Order id
+          required: true
+          type: string
+        security:
+        - token: []
+        tags:
+        - order status
+        requestBody:
+          content:
+            application/text:     # Media type
+              examples: pending
+        responses:
+          "200":
+            description:  Order status
+            schema:
+              type: string
+          "403":
+            description: Unauthorized for the current operation
+            schema:
+              $ref: '#/definitions/Error'
+          "404":
+            description: Order not found
+            schema:
+              $ref: '#/definitions/Error'
+          default:
+            description: Unexpected error
+            schema:
+              $ref: '#/definitions/Error'
+definitions:
+  Order:
+    properties:
+      id:
+        type: string
+        description: Unique identifier representing a specific order.
+      status:
+        type: string
+        description: Current status of an order.
+      name:
+        type: string
+        description: Client's name.
+      phone:
+        type: string
+        description: Client's phone number.
+      eMail:
+        type: string
+        description: Client's e-mail.
+      date:
+        type: date
+        description: Date, when the service is requested.
+      time:
+        type: string
+        description: Time, when the service is requested.
+      numberParticipants:
+        type: long
+        description: Number of participants on the order.
+      description:
+        type: string
+        description: Description of an order.
+    OrderList:
+      properties:
+        items:
+          description: Contains the list of orders
+          type: array
+          orders:
+            $ref: "#/definitions/Order"
+  Error:
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string

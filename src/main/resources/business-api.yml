@@ -20,9 +20,7 @@ paths:
   /businesses:
     get:
       summary: Existing business profiles
-      description: The endpoint returns information about business profiles available at a given location.
-      The response includes the name and other details about each business, and lists the profiles
-      in the proper display order.
+      description: The endpoint returns information about business profiles available at a given location. The response includes the name and other details about each business, and lists the profiles in the proper display order.
       parameters:
       - name: location
         in: query
@@ -39,39 +37,38 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Business'
+              $ref: '#/definitions/BusinessList'
         default:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
     post:
       summary: Adds a new business profile
-      description: The endpoint sends details of business profile provided during registration, containing content of the following fields: first name, last name, e-mail, phone, service location, short service description and an image.
-                     The response includes the result of the operation.
+      description: The endpoint sends details of business profile provided during registration, containing fields' content (first name, last name, e-mail, phone, service location, short service description and an image). The response includes the result of the operation.
       consumes:
       - application/json # Media type
       produces:
       - application/json # Media type
       parameters:
       - name: business
-          in: body
-          description: business entity
-          required: true
-          schema:  # Request body contents
-            $ref: '#/definitions/Business' # Reference to an object
-          examples:    # Child of media type
-            Ada:   # Example 1
-              value:
-                firstName: Ada
-                lastName: Polkanova
-                eMail: dogs4fun@dogmail.com
-                phone: +49 177 77777777
-                serviceLocation: Berlin
-                description: Hi, I'm Ada, the dog.
-                photo: image
+        in: body
+        description: business entity
+        required: true
+        schema:  # Request body contents
+           $ref: '#/definitions/Business' # Reference to an object
+        examples:    # Child of media type
+          Ada:   # Example 1
+            value:
+              firstName: Ada
+              lastName: Polkanova
+              eMail: dogs4fun@dogmail.com
+              phone: +49 177 77777777
+              serviceLocation: Berlin
+              description: Hi, I'm Ada, the dog.
+              photo: image
       responses:
-        "200":
-          description: Result of the operation
+        "201":
+          description: Created. Result of the operation
           schema:
             type: long
 
@@ -82,8 +79,7 @@ paths:
   /business/{business_id}:
     get:
       summary: Fetch a business profile
-      description: The endpoint returns information about a business profile with a given id.
-      The response includes the name and other details about the business.
+      description: The endpoint returns information about a business profile with a given id. The response includes the name and other details about the business.
       parameters:
       - name: business_id
         in: url
@@ -115,8 +111,7 @@ paths:
             $ref: '#/definitions/Error'
     put:
       summary: Updates a business profile
-      description: The endpoint updates details of business profile previously retrieved from the database, containing content of the following fields: id, first name, last name, e-mail, phone, service location, short service description and an image.
-                     The response includes the result of the operation.
+      description: The endpoint updates details of business profile previously retrieved from the database, containing fields' content (id, first name, last name, e-mail, phone, service location, short service description and an image). The response includes the result of the operation.
       requestBody:
         content:
           application/json:     # Media type

@@ -20,8 +20,7 @@ paths:
   /orders:
     get:
       summary: Existing orders
-      description: The endpoint returns information about orders assigned to this business.
-      The response includes the order details, and lists the orders according to their execution time.
+      description: The endpoint returns information about orders assigned to this business. The response includes the order details, and lists the orders according to their execution time.
       parameters:
       - name: order id
         in: query
@@ -38,39 +37,38 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Order'
+              $ref: '#/definitions/OrderList'
         default:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
     post:
       summary: Adds a new order
-      description: The endpoint sends details of an order provided by the client, containing content of the following fields: name, phone number, e-mail, date, time, number of participants, additional order information and order status.
-                     The response includes the result of the operation.
+      description: The endpoint sends details of an order provided by the client, containing fields' content (name, phone number, e-mail, date, time, number of participants, additional order information and order status). The response includes the result of the operation.
       consumes:
       - application/json # Media type
       produces:
       - application/json # Media type
       parameters:
       - name: order
-          in: body
-          description: order entity
-          required: true
-          schema:  # Request body contents
-            $ref: '#/components/schemas/Order' # Reference to an object
-          examples:    # Child of media type
-            Lena:   # Example 1
-              value:
-                name: Lena
-                phone: +49 176 68558497
-                eMail: aoneko@gmx.de
-                date: 27.09.2018
-                time: 15:00-20:00
-                numberParticipants: 1
-                description: Hi, I want a dog sled tour in Berlin.
+        in: body
+        description: order entity
+        required: true
+        schema:  # Request body contents
+          $ref: '#/components/schemas/Order' # Reference to an object
+        examples:    # Child of media type
+          Lena:   # Example 1
+            value:
+              name: Lena
+              phone: +49 176 68558497
+              eMail: aoneko@gmx.de
+              date: 27.09.2018
+              time: 15:00-20:00
+              numberParticipants: 1
+              description: Hi, I want a dog sled tour in Berlin.
       responses:
-        "200":
-          description: Result of the operation
+        "201":
+          description: Created. Result of the operation
           schema:
             type: long
 
@@ -78,15 +76,14 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    /order/{order_id}:
+    /order/{order_number}:
       get:
         summary: Fetch an order
-        description: The endpoint returns information about an order with a given id.
-        The response includes the name, date and status of the order.
+        description: The endpoint returns information about an order with a given id. The response includes the name, date and status of the order.
         parameters:
-        - name: order_id
+        - name: order_number
           in: url
-          description: Order id
+          description: Order number
           required: true
           type: string
         security:
@@ -95,7 +92,7 @@ paths:
         - order details
         responses:
           "200":
-            description:  Order fields: name, date and status
+            description:  Order fields (name, date and status)
             schema:
               type: json
               order:
@@ -113,11 +110,10 @@ paths:
             schema:
               $ref: '#/definitions/Error'
 
-      /order/{order_id}/status:
+      /order/{order_number}/status:
       put:
         summary: Updates current order status
-        description: The endpoint updates current status of the order with given id.
-        The response includes the result of the operation.
+        description: The endpoint updates current status of the order with given id. The response includes the result of the operation.
         parameters:
         - name: id
           in: url
@@ -128,6 +124,11 @@ paths:
           in: url
           description: Order status
           type: string
+          enum:
+            - not sent
+            - pending
+            - confirmed
+            - closed
         security:
         - token: []
         tags:
@@ -150,7 +151,7 @@ paths:
             schema:
               $ref: '#/definitions/Error'
           "409":
-            description: Conflict: the order has been already taken by another business
+            description: Conflict. The order has been already taken by another business
             schema:
               $ref: '#/definitions/Error'
           default:
@@ -160,12 +161,12 @@ paths:
 definitions:
   Order:
     properties:
-      order_id:
+      order_number:
         type: string
         description: Unique identifier representing a specific order.
       business_id:
         type: string
-        description: Unique identifier representing a business, which accepted the order.
+        description: Unique identifier representing a business, which accepted the order. It can be null, if an order isn't assigned to any of the businesses.
       status:
         type: string
         description: Current status of an order.

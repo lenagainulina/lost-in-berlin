@@ -22,7 +22,7 @@ paths:
       summary: Existing orders
       description: The endpoint returns information about orders assigned to this business. The response includes the order details, and lists the orders according to their execution time.
       parameters:
-      - name: order id
+      - name: business id
         in: query
         description: id of the current business
         required: true

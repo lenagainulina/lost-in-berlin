@@ -76,12 +76,12 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /business/{business_id}:
+  /businesses/{id}:
     get:
       summary: Fetch a business profile
       description: The endpoint returns information about a business profile with a given id. The response includes the name and other details about the business.
       parameters:
-      - name: business_id
+      - name: id
         in: url
         description: Profile id
         required: true
@@ -148,8 +148,8 @@ paths:
   definitions:
     Business:
       properties:
-        business_id:
-          type: string
+        id:
+          type: long
           description: Unique identifier representing a specific business.
         firstName:
           type: string

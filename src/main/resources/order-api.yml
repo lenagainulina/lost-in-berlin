@@ -17,6 +17,26 @@ securityDefinitions:
 produces:
 - application/json
 paths:
+  /orders/all:
+    get:
+      summary: Existing orders
+      description: The endpoint returns information about all existing orders. The response includes the order details, and lists the orders according to their execution time.
+      parameters:
+      security:
+      - token: []
+      tags:
+      - orders
+      responses:
+        "200":
+          description: An array of orders
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/OrderList'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   /orders:
     get:
       summary: Existing orders
@@ -76,7 +96,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    /order/{order_number}:
+    /orders/{order_number}:
       get:
         summary: Fetch an order
         description: The endpoint returns information about an order with a given id. The response includes the name, date and status of the order.
@@ -110,19 +130,20 @@ paths:
             schema:
               $ref: '#/definitions/Error'
 
-      /order/{order_number}/status:
+      /orders/{order_number}/status:
       put:
         summary: Updates current order status
         description: The endpoint updates current status of the order with given id. The response includes the result of the operation.
         parameters:
-        - name: id
+        - name: order_number
           in: url
-          description: Order id
+          description: Order number
           required: true
           type: string
         - name: status
           in: url
           description: Order status
+          required: true
           type: string
           enum:
             - not sent

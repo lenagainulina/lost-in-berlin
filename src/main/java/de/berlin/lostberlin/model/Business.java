@@ -33,6 +33,10 @@ public class Business implements Serializable {
 
         private byte[] photo;
 
+    private String login;
+
+    private String password;
+
 
         @Column(nullable = false, updatable = false)
         @Temporal(TemporalType.TIMESTAMP)
@@ -47,7 +51,8 @@ public class Business implements Serializable {
     public Business()  {
     }
 
-    public Business(String fName, String lName, String eMail, String phone, String description, String serviceLocation, byte[] photo, Order[] orders) {
+    public Business(Long id, @NotBlank String fName, @NotBlank String lName, @NotBlank String eMail, String phone, String description, String serviceLocation, byte[] photo, String login, String password, Date createdAt, Date updatedAt) {
+        this.id = id;
         this.fName = fName;
         this.lName = lName;
         this.eMail = eMail;
@@ -55,6 +60,18 @@ public class Business implements Serializable {
         this.description = description;
         this.serviceLocation = serviceLocation;
         this.photo = photo;
+        this.login = login;
+        this.password = password;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getfName() {
@@ -73,11 +90,27 @@ public class Business implements Serializable {
         this.lName = lName;
     }
 
-    public String geteMail() {
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
         return eMail;
     }
 
-    public void seteMail(String eMail) {
+    public void setEmail(String eMail) {
         this.eMail = eMail;
     }
 
@@ -113,16 +146,19 @@ public class Business implements Serializable {
         this.photo = photo;
     }
 
-    @Override
-    public String toString() {
-        return "Business{" +
-                ", fName='" + fName + '\'' +
-                ", lName='" + lName + '\'' +
-                ", eMail='" + eMail + '\'' +
-                ", phone='" + phone + '\'' +
-                ", description='" + description + '\'' +
-                ", serviceLocation='" + serviceLocation + '\'' +
-                ", photo=" + photo +
-                '}';
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

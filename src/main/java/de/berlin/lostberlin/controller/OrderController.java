@@ -1,6 +1,6 @@
 package de.berlin.lostberlin.controller;
 
-import de.berlin.lostberlin.Service.MailService;
+import de.berlin.lostberlin.service.MailService;
 import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.Order;
 import de.berlin.lostberlin.repository.OrderRepository;
@@ -52,9 +52,8 @@ public class OrderController {
 
     @GetMapping("/orders/{order_number}")
     public Order getByOrderNr(@PathVariable (value="order_number") String orderNr){
-        Order order = orderRepo.findById(orderNr)
+        return orderRepo.findById(orderNr)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "order_number", orderNr));
-        return order;
     }
 
     @PutMapping("/orders/{order_number}/status")

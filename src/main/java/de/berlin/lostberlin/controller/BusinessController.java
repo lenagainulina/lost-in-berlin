@@ -41,7 +41,7 @@ public class BusinessController {
 
         business.setfName(businessProfile.getfName());
         business.setlName(businessProfile.getlName());
-        business.seteMail(businessProfile.geteMail());
+        business.setEmail(businessProfile.getEmail());
         business.setPhone(businessProfile.getPhone());
         business.setDescription(businessProfile.getDescription());
         business.setPhoto(businessProfile.getPhoto());

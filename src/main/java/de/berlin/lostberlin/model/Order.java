@@ -26,7 +26,6 @@ public class Order {
     @NotBlank
     private String orderNr;
     private Long[] chosenBusinessIds;
-    private Long[] contactedBusinessIds;
     private Long businessId;
     private String status;
     @NotBlank
@@ -50,10 +49,9 @@ public class Order {
     public Order() {
     }
 
-    public Order(String orderNr, @NotBlank Long[] chosenBusinessIds, Long[] contactedBusinessIds, Long businessId, String status, @NotBlank String name, String phone, @NotBlank String eMail, Date date, String time, long participantsNr, String description, Date createdAt, Date updatedAt) {
+    public Order(String orderNr, @NotBlank Long[] chosenBusinessIds, Long businessId, String status, @NotBlank String name, String phone, @NotBlank String eMail, Date date, String time, long participantsNr, String description, Date createdAt, Date updatedAt) {
         this.orderNr = orderNr;
         this.chosenBusinessIds = chosenBusinessIds;
-        this.contactedBusinessIds = contactedBusinessIds;
         this.businessId = businessId;
         this.status = status;
         this.name = name;
@@ -81,14 +79,6 @@ public class Order {
 
     public void setChosenBusinessIds(Long[] chosenBusinessIds) {
         this.chosenBusinessIds = chosenBusinessIds;
-    }
-
-    public Long[] getContactedBusinessIds() {
-        return contactedBusinessIds;
-    }
-
-    public void setContactedBusinessIds(Long[] contactedBusinessIds) {
-        this.contactedBusinessIds = contactedBusinessIds;
     }
 
     public Long getBusinessId() {
@@ -184,7 +174,6 @@ public class Order {
         return "Order{" +
                 "orderNr='" + orderNr + '\'' +
                 ", chosenBusinessIds=" + Arrays.toString(chosenBusinessIds) +
-                ", contactedBusinessIds=" + Arrays.toString(contactedBusinessIds) +
                 ", businessId='" + businessId + '\'' +
                 ", status='" + status + '\'' +
                 ", name='" + name + '\'' +

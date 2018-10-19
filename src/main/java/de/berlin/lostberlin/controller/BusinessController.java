@@ -17,8 +17,8 @@ public class BusinessController {
 
 
     @GetMapping("/businesses")
-    public List<Business> getBusinesses(){
-       return businessRepo.findAll();
+    public List<Business> getBusinesses(@RequestParam (required=true, value = "location") String serviceLocation){
+        return businessRepo.findAllByServiceLocation(serviceLocation);
     }
 
     @PostMapping("/businesses")

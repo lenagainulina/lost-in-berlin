@@ -6,9 +6,9 @@ import org.hibernate.annotations.Parameter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import java.util.Arrays;
 import java.util.Date;
 
 @Entity
@@ -23,38 +23,35 @@ public class Order {
             strategy = "de.berlin.lostberlin.model.DatePrefixedSequenceIdGenerator",
             parameters = {@Parameter(name = DatePrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "50")}
     )
+    @NotBlank
     private String orderNr;
-
-
-    private String businessId;
-
-        private String status;
-        @NotBlank
-        private String name;
-        private String phone;
-        @NotBlank
-        private String eMail;
-        private Date date;
-        private String time;
-        private long participantsNr;
-        private String description;
-
-        @Column(nullable = false, updatable = false)
-        @Temporal(TemporalType.TIMESTAMP)
-        @CreatedDate
-        private Date createdAt;
-
-        @Column(nullable = false)
-        @Temporal(TemporalType.TIMESTAMP)
-        @LastModifiedDate
-        private Date updatedAt;
+    private Long[] chosenBusinessIds;
+    private Long businessId;
+    private String status;
+    @NotBlank
+    private String name;
+    private String phone;
+    @NotBlank
+    private String eMail;
+    private Date date;
+    private String time;
+    private long participantsNr;
+    private String description;
+    @Column(nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreatedDate
+    private Date createdAt;
+    @Column(nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    @LastModifiedDate
+    private Date updatedAt;
 
     public Order() {
     }
 
-
-    public Order(String orderNr, String businessId, String status, String name, String phone, String eMail, Date date, String time, long participantsNr, String description) {
+    public Order(String orderNr, @NotBlank Long[] chosenBusinessIds, Long businessId, String status, @NotBlank String name, String phone, @NotBlank String eMail, Date date, String time, long participantsNr, String description, Date createdAt, Date updatedAt) {
         this.orderNr = orderNr;
+        this.chosenBusinessIds = chosenBusinessIds;
         this.businessId = businessId;
         this.status = status;
         this.name = name;
@@ -64,6 +61,8 @@ public class Order {
         this.time = time;
         this.participantsNr = participantsNr;
         this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public String getOrderNr() {
@@ -74,11 +73,19 @@ public class Order {
         this.orderNr = orderNr;
     }
 
-    public String getBusinessId() {
+    public Long[] getChosenBusinessIds() {
+        return chosenBusinessIds;
+    }
+
+    public void setChosenBusinessIds(Long[] chosenBusinessIds) {
+        this.chosenBusinessIds = chosenBusinessIds;
+    }
+
+    public Long getBusinessId() {
         return businessId;
     }
 
-    public void setBusinessId(String businessId) {
+    public void setBusinessId(Long businessId) {
         this.businessId = businessId;
     }
 
@@ -106,11 +113,11 @@ public class Order {
         this.phone = phone;
     }
 
-    public String geteMail() {
+    public String getEmail() {
         return eMail;
     }
 
-    public void seteMail(String eMail) {
+    public void setEmail(String eMail) {
         this.eMail = eMail;
     }
 
@@ -146,10 +153,27 @@ public class Order {
         this.description = description;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
                 "orderNr='" + orderNr + '\'' +
+                ", chosenBusinessIds=" + Arrays.toString(chosenBusinessIds) +
                 ", businessId='" + businessId + '\'' +
                 ", status='" + status + '\'' +
                 ", name='" + name + '\'' +
@@ -159,6 +183,8 @@ public class Order {
                 ", time='" + time + '\'' +
                 ", participantsNr=" + participantsNr +
                 ", description='" + description + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

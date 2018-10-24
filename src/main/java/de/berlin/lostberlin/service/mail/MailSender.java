@@ -21,7 +21,7 @@ public abstract class MailSender {
 	@Autowired
 	SendGrid sendGrid;
 	
-	@Value("mail.from")
+	@Value("${mail.from}")
 	private String from;
 	
 	public Optional<MailSenderResponse> send(Params  params) {

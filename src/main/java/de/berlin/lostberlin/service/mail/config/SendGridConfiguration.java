@@ -8,7 +8,7 @@ import com.sendgrid.SendGrid;
 @Configuration
 public class SendGridConfiguration {
 	
-	private static String API_KEY = "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";
+	private static String API_KEY = "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";
 	
 	@Bean
 	public SendGrid getSendGrid() {

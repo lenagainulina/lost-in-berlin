@@ -6,6 +6,8 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
+import de.berlin.lostberlin.model.Business;
+import de.berlin.lostberlin.repository.BusinessRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -29,7 +31,7 @@ public class MailServiceTest {
 	
 	@Autowired
 	MailService service;
-	
+
 	
 	@Test
 	public void testConfirmationMailSent() throws Exception {
@@ -48,12 +50,34 @@ public class MailServiceTest {
 	public void testConfirmationMailNotSent() {
 		
 	}
+
+	@Test
+	public void testNotificationMailSent() throws Exception{
+		Order order = createTestOrderUpdate();
+
+		when(grid.api(Mockito.any(Request.class))).thenReturn(createTestResponse());
+
+		Optional<MailSenderResponse> senderResponse = service.sendNotificationMail(order);
+		assertTrue(senderResponse.isPresent());
+		assertEquals(123, senderResponse.get().getStatusCode());
+		assertEquals("TestBody", senderResponse.get().getBody());
+	}
 	
 	private Order createTestOrder() {
 		Order order = new Order();
 		order.setEmail("test@server");
 		order.setName("Customer Name");
 		order.setOrderNr("12123");
+		return order;
+	}
+
+	private Order createTestOrderUpdate() {
+		Order order = new Order();
+		order.setEmail("test@server");
+		order.setName("Customer Name");
+		order.setOrderNr("12123");
+		order.setBusinessId(1L);
+		order.setStatus("confirmed");
 		return order;
 	}
 	

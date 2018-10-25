@@ -25,4 +25,4 @@
 /.nb-gradle/
 
 # Application Properties
-application.properties
+sendgrid.properties

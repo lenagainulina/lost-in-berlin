@@ -1,21 +1,19 @@
 package de.berlin.lostberlin.service.mail;
 
+import de.berlin.lostberlin.model.Business;
+import de.berlin.lostberlin.model.Order;
+import de.berlin.lostberlin.repository.BusinessRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import de.berlin.lostberlin.model.Business;
-import de.berlin.lostberlin.repository.BusinessRepository;
-import org.omg.CORBA.Environment;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import de.berlin.lostberlin.model.Order;
-
-import javax.swing.text.html.Option;
-
 @Component
+@PropertySource(value = "application.properties")
 public class MailService {
 
     @Autowired
@@ -47,12 +45,13 @@ public class MailService {
     }
 
     private Params createNotificationMailParams(Order order) {
-
-        Business business;
+        Business business = null;
         Optional result = businessRepo.findById(order.getBusinessId());
-        if (result.isPresent()) {
+        if (result.isPresent()) try {
             business = (Business) result.get();
-        } else return null;
+        } catch (Exception e) {
+            e.getMessage();
+        }
 
         String subject = "Lost in Berlin Order Notification Mail";
         String toMail = order.getEmail();
@@ -64,3 +63,4 @@ public class MailService {
         return new Params(fromMail, toMail, subject, map);
     }
 }
+

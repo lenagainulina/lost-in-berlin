@@ -20,12 +20,10 @@ public abstract class MailSender {
 	
 	@Autowired
 	SendGrid sendGrid;
-	
-	@Value("${mail.from}")
-	private String from;
+
 	
 	public Optional<MailSenderResponse> send(Params  params) {
-		Mail mail = new Mail(new Email(from),
+		Mail mail = new Mail(new Email(params.getFromMail()),
 				params.getSubject(), 
 				new Email(params.getToEmail()), 
 				getContent(params));

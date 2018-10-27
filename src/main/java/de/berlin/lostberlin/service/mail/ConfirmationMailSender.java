@@ -1,15 +1,12 @@
 package de.berlin.lostberlin.service.mail;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.sendgrid.Content;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import com.sendgrid.Content;
+import java.util.Map;
 
 @Component
 @PropertySource(value = "application.properties")

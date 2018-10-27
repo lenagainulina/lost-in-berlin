@@ -23,7 +23,6 @@ public class Order {
             strategy = "de.berlin.lostberlin.model.DatePrefixedSequenceIdGenerator",
             parameters = {@Parameter(name = DatePrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "50")}
     )
-    @NotBlank
     private String orderNr;
     private Long[] chosenBusinessIds;
     private Long businessId;

@@ -8,6 +8,7 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -25,16 +26,20 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public List<Order> getOrders(@RequestParam(required = true, value = "business_id") Long businessId) {
+
+    public List<Order> getOrders(@RequestParam (required=true, value = "business_id") Long businessId) {
+
         return orderRepo.findAllByBusinessId(businessId);
     }
 
     @PostMapping("/orders")
-    public String createOrder(@Valid @RequestBody Order order) {
-        if (order.getChosenBusinessIds().length == 0
-                || order.getName().equals("")
-                || !EmailValidator.getInstance().isValid(order.getEmail())
-        ) {
+
+    public String createOrder(@Valid @RequestBody Order order){
+        if (order.getChosenBusinessIds().length==0
+                ||order.getName().equals("")
+                ||!EmailValidator.getInstance().isValid(order.getEmail())
+        ){
+
             return "Bad request";
         }
         Order result = orderRepo.save(order);
@@ -57,11 +62,13 @@ public class OrderController {
     }
 
     @PutMapping("/orders/{order_number}/status")
-    public Order updateOrderStatus(@PathVariable(value = "order_number") String orderNr, @Valid @RequestBody Order orderProfile) {
-        Order order = orderRepo.findById(orderNr)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "order_number", orderNr));
-        order.setBusinessId(orderProfile.getBusinessId());
-        order.setStatus(orderProfile.getStatus());
+
+    public Order updateOrderStatus(@PathVariable (value="order_number") String orderNr, @Valid @RequestBody Order orderProfile){
+    Order order = orderRepo.findById(orderNr)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", "order_number", orderNr));
+    order.setBusinessId(orderProfile.getBusinessId());
+    order.setStatus(orderProfile.getStatus());
+
 
         Order result = orderRepo.save(order);
 

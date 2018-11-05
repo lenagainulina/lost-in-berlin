@@ -21,7 +21,9 @@ public class Order {
     @GenericGenerator(
             name = "order_num",
             strategy = "de.berlin.lostberlin.model.DatePrefixedSequenceIdGenerator",
+
             parameters = {@Parameter(name = DatePrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "50")})
+
     private String orderNr;
     private Long[] chosenBusinessIds;
     private Long businessId;

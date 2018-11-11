@@ -1,4 +1,4 @@
-package de.berlin.lostberlin.model;
+package de.berlin.lostberlin.model.Order;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;

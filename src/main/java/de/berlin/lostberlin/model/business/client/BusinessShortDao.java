@@ -1,32 +1,22 @@
-package de.berlin.lostberlin.model.Business;
+package de.berlin.lostberlin.model.business.client;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.Email;
-
+@Component
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class BusinessUpdateDto {
-
+@NoArgsConstructor
+public class BusinessShortDao {
     private String fName;
 
     private String lName;
-
-    @Email
-    private String eMail;
-
-    private String phone;
 
     private String description;
 
     private String serviceLocation;
 
     private byte[] photo;
-
-    private String username;
-
-
 }

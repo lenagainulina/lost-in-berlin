@@ -1,4 +1,4 @@
-package de.berlin.lostberlin.model.Order;
+package de.berlin.lostberlin.model.order.persistence;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

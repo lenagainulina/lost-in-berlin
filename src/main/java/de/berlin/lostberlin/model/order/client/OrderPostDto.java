@@ -1,4 +1,4 @@
-package de.berlin.lostberlin.model.Order;
+package de.berlin.lostberlin.model.order.client;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -31,3 +31,4 @@ public class OrderPostDto {
     private long participantsNr;
     private String description;
 }
+

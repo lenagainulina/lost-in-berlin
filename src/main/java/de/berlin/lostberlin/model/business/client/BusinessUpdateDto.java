@@ -1,22 +1,20 @@
-package de.berlin.lostberlin.model.Business;
+package de.berlin.lostberlin.model.business.client;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BusinessPostDto {
-    @NotBlank
+public class BusinessUpdateDto {
+
     private String fName;
-    @NotBlank
+
     private String lName;
 
-    @NotBlank
     @Email
     private String eMail;
 
@@ -28,9 +26,7 @@ public class BusinessPostDto {
 
     private byte[] photo;
 
-    @NotBlank
     private String username;
 
-    @NotBlank
-    private String password;
+
 }

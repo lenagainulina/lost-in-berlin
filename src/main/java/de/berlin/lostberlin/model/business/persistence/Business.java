@@ -1,4 +1,4 @@
-package de.berlin.lostberlin.model.Business;
+package de.berlin.lostberlin.model.business.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,41 +22,41 @@ import java.util.Date;
 
 public class Business implements Serializable {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
 
-        private Long id;
+    private Long id;
 
-        private String fName;
+    private String fName;
 
-        private String lName;
+    private String lName;
 
-        @Column (unique = true)
-        private String eMail;
+    @Column (unique = true)
+    private String eMail;
 
-        private String phone;
+    private String phone;
 
-        private String description;
+    private String description;
 
-        private String serviceLocation;
+    private String serviceLocation;
 
-        private byte[] photo;
+    private byte[] photo;
 
-        private String username;
+    private String username;
 
-        private String password;
-
-
-        @Column(nullable = false, updatable = false)
-        @Temporal(TemporalType.TIMESTAMP)
-        @CreatedDate
-        private Date createdAt;
+    private String password;
 
 
-        @Column(nullable = false)
-        @Temporal(TemporalType.TIMESTAMP)
-        @LastModifiedDate
-        private Date updatedAt;
+    @Column(nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreatedDate
+    private Date createdAt;
+
+
+    @Column(nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    @LastModifiedDate
+    private Date updatedAt;
 
 
     @JsonIgnore

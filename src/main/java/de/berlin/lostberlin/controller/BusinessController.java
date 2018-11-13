@@ -1,53 +1,44 @@
 package de.berlin.lostberlin.controller;
 
-import de.berlin.lostberlin.exception.ResourceNotFoundException;
-import de.berlin.lostberlin.model.Business;
-import de.berlin.lostberlin.repository.BusinessRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import de.berlin.lostberlin.model.business.client.BusinessPostDto;
+import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
+import de.berlin.lostberlin.service.BusinessService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
-
 
 @RestController
+@RequestMapping("/businesses")
 public class BusinessController {
-    @Autowired
-    private BusinessRepository businessRepo;
 
+    private BusinessService businessService;
 
-    @GetMapping("/businesses")
-    public List<Business> getBusinesses(@RequestParam (required=true, value = "location") String serviceLocation){
-        return businessRepo.findAllByServiceLocation(serviceLocation);
+    public BusinessController(BusinessService businessService) {
+        this.businessService = businessService;
     }
 
-    @PostMapping("/businesses")
-    public Business createBusiness(@Valid @RequestBody Business business) {
-        return businessRepo.save(business);
+    @GetMapping
+    public ResponseEntity getBusinesses(@RequestParam (required=true, value = "location") String serviceLocation){
+        return ResponseEntity.status(HttpStatus.OK).body(businessService.retrieveBusinessByLocation(serviceLocation));
     }
 
-    @GetMapping("/businesses/{id}")
-    public Business getBusinessById(@PathVariable(value = "id") Long id) {
-        return businessRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Business", "id", id));
+    @PostMapping
+    public ResponseEntity createBusiness(@Valid @RequestBody BusinessPostDto businessProfile) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(businessService.saveNewlyCreatedBusinessProfile(businessProfile));
     }
 
-    @PutMapping("/businesses/{id}")
-    public Business updateBusiness (@PathVariable(value = "id") Long id,
-                           @Valid @RequestBody Business businessProfile) {
+    @GetMapping("/{id}")
+    public ResponseEntity getBusinessById(@PathVariable(value = "id") Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(businessService.retrieveBusinessById(id));
+    }
 
-        Business business = businessRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Business", "id", id));
+    @PutMapping("/{id}")
+    public ResponseEntity updateBusiness (@PathVariable(value = "id") Long id,
+                           @Valid @RequestBody BusinessUpdateDto businessProfile) {
 
-        business.setfName(businessProfile.getfName());
-        business.setlName(businessProfile.getlName());
-        business.setEmail(businessProfile.getEmail());
-        business.setPhone(businessProfile.getPhone());
-        business.setDescription(businessProfile.getDescription());
-        business.setPhoto(businessProfile.getPhoto());
-
-        Business updatedBusiness = businessRepo.save(business);
-        return updatedBusiness;
+        return ResponseEntity.status(HttpStatus.OK).body(businessService.saveUpdatedBusinessProfile(id, businessProfile));
     }
 
 }

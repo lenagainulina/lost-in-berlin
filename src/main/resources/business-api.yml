@@ -55,7 +55,7 @@ paths:
         description: business entity
         required: true
         schema:  # Request body contents
-           $ref: '#/definitions/Business' # Reference to an object
+           $ref: '#/definitions/business' # Reference to an object
         examples:    # Child of media type
           Ada:   # Example 1
             value:
@@ -96,7 +96,7 @@ paths:
           schema:
             type: json
             profile:
-              $ref: '#/definitions/Business'
+              $ref: '#/definitions/business'
         "403":
           description: Unauthorized for the current operation
           schema:
@@ -116,7 +116,7 @@ paths:
         content:
           application/json:     # Media type
             schema:             # Request body contents
-              $ref: '#/definitions/Business'   # Reference to an object
+              $ref: '#/definitions/business'   # Reference to an object
             examples:    # Child of media type
               Ada:   # Example 1
                 value:
@@ -178,7 +178,7 @@ paths:
           description: Contains the list of businesses
           type: array
           businesses:
-            $ref: "#/definitions/Business"
+            $ref: "#/definitions/business"
   Error:
     properties:
       code:

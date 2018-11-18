@@ -75,7 +75,7 @@ paths:
         description: order entity
         required: true
         schema:  # Request body contents
-          $ref: '#/components/schemas/Order' # Reference to an object
+          $ref: '#/components/schemas/order' # Reference to an object
         examples:    # Child of media type
           Lena:   # Example 1
             value:
@@ -103,7 +103,7 @@ paths:
         parameters:
         - name: order_number
           in: url
-          description: Order number
+          description: order number
           required: true
           type: string
         security:
@@ -112,17 +112,17 @@ paths:
         - order details
         responses:
           "200":
-            description:  Order fields (name, date and status)
+            description:  order fields (name, date and status)
             schema:
               type: json
               order:
-                $ref: '#/definitions/Order'
+                $ref: '#/definitions/order'
           "403":
             description: Unauthorized for the current operation
             schema:
               $ref: '#/definitions/Error'
           "404":
-            description: Order not found
+            description: order not found
             schema:
               $ref: '#/definitions/Error'
           default:
@@ -137,12 +137,12 @@ paths:
         parameters:
         - name: order_number
           in: url
-          description: Order number
+          description: order number
           required: true
           type: string
         - name: status
           in: url
-          description: Order status
+          description: order status
           required: true
           type: string
           enum:
@@ -160,7 +160,7 @@ paths:
               examples: pending
         responses:
           "200":
-            description:  Order status
+            description:  order status
             schema:
               type: string
           "403":
@@ -168,7 +168,7 @@ paths:
             schema:
               $ref: '#/definitions/Error'
           "404":
-            description: Order not found
+            description: order not found
             schema:
               $ref: '#/definitions/Error'
           "409":
@@ -218,7 +218,7 @@ definitions:
           description: Contains the list of orders
           type: array
           orders:
-            $ref: "#/definitions/Order"
+            $ref: "#/definitions/order"
   Error:
     properties:
       code:

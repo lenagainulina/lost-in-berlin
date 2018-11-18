@@ -9,7 +9,7 @@ import com.sendgrid.SendGrid;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource(value = "sendgrid.properties")
+@PropertySource("classpath:sendgrid.properties")
 public class SendGridConfiguration {
 
     @Value("${spring.sendgrid.api-key}")

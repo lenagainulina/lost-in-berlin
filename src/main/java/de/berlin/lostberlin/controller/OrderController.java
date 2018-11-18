@@ -1,85 +1,106 @@
 package de.berlin.lostberlin.controller;
 
-import de.berlin.lostberlin.exception.ResourceNotFoundException;
-import de.berlin.lostberlin.model.Order;
+import de.berlin.lostberlin.model.order.client.OrderFullDao;
+import de.berlin.lostberlin.model.order.client.OrderPostDto;
+import de.berlin.lostberlin.model.order.client.OrderShortDao;
+import de.berlin.lostberlin.model.order.client.OrderStatusDao;
+import de.berlin.lostberlin.model.order.persistence.Order;
+import de.berlin.lostberlin.model.order.persistence.StatusTypes;
 import de.berlin.lostberlin.repository.OrderRepository;
+import de.berlin.lostberlin.service.OrderService;
 import de.berlin.lostberlin.service.mail.MailService;
-import org.apache.commons.validator.routines.EmailValidator;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import javax.validation.Valid;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/orders")
 public class OrderController {
-
-    @Autowired
     private OrderRepository orderRepo;
-
-    @Autowired
     private MailService mailService;
+    private OrderService orderService;
 
-    @GetMapping("/orders/all")
+    public OrderController(OrderRepository orderRepo,MailService mailService, OrderService orderService) {
+        this.orderRepo = orderRepo;
+        this.mailService = mailService;
+        this.orderService = orderService;
+    }
+
+    @GetMapping("/all")
     public List<Order> getAllOrders() {
-        return orderRepo.findAll();
+        return orderService.retrieveAllOrders();
     }
 
-    @GetMapping("/orders")
-
-    public List<Order> getOrders(@RequestParam (required=true, value = "business_id") Long businessId) {
-
-        return orderRepo.findAllByBusinessId(businessId);
+    @GetMapping
+    public List<OrderShortDao> getOrders(@RequestParam(value = "business_id") Long businessId) {
+        return orderService.retrieveOrdersByBusinessId(businessId);
     }
 
-    @PostMapping("/orders")
+    @GetMapping("/{order_number}")
+    public OrderStatusDao getByOrderNr(@PathVariable(value = "order_number") String orderNr) {
+        return orderService.retrieveOrderByOrderNr(orderNr);
+    }
 
-    public String createOrder(@Valid @RequestBody Order order){
-        if (order.getChosenBusinessIds().length==0
-                ||order.getName().equals("")
-                ||!EmailValidator.getInstance().isValid(order.getEmail())
-        ){
+    @PostMapping
+    public ResponseEntity createOrder(@Valid @RequestBody OrderPostDto orderProfile) {
 
-            return "Bad request";
-        }
-        Order result = orderRepo.save(order);
+        Order result = orderService.saveOrderProfile(orderProfile);
+
         if (result != null) {
             try {
                 mailService.sendConfirmationMail(result);
             } catch (Exception e) {
-                return e.getMessage();
+                e.getMessage();
             }
         } else {
-            return "Failed to save order " + order.getOrderNr();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save order for" + orderProfile.getName());
         }
-        return "Success";
+        return ResponseEntity.status(HttpStatus.CREATED).body("order created");
     }
 
-    @GetMapping("/orders/{order_number}")
-    public Order getByOrderNr(@PathVariable(value = "order_number") String orderNr) {
-        return orderRepo.findById(orderNr)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "order_number", orderNr));
-    }
-
-    @PutMapping("/orders/{order_number}/status")
-
-    public Order updateOrderStatus(@PathVariable (value="order_number") String orderNr, @Valid @RequestBody Order orderProfile){
-    Order order = orderRepo.findById(orderNr)
-            .orElseThrow(() -> new ResourceNotFoundException("Order", "order_number", orderNr));
-    order.setBusinessId(orderProfile.getBusinessId());
-    order.setStatus(orderProfile.getStatus());
-
-
-        Order result = orderRepo.save(order);
-
-        if(result !=null && result.getStatus().equals("confirmed")){
+    @PutMapping("/{order_number}/confirmation")
+    public ResponseEntity confirmOrder(
+            @PathVariable(value = "order_number") String orderNr,
+            @Valid @RequestParam String status,
+            @Valid @RequestParam (value = "business_id") Long businessId
+    ) {
+        Order order = orderRepo.findById(orderNr)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "order not found"));
+        if (order.getStatus().equals(StatusTypes.PENDING)) {
+            orderService.updateOrderStatus(orderNr, status, businessId);
+            OrderFullDao result = orderService.retrieveFullOrderProfile(orderNr, status, businessId);
+            if (result != null) {
             try {
                 mailService.sendNotificationMail(result);
             } catch (Exception e) {
                 e.getMessage();
             }
+            }else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save order " + order.getOrderNr());
+            }
+            return ResponseEntity.accepted().body(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, the order has already been taken by another business");
         }
-        return result;
     }
 
+    @PutMapping("/{order_number}/status")
+    public ResponseEntity updateOrderStatus(
+            @PathVariable(value = "order_number") String orderNr,
+            @Valid @RequestParam String status,
+            @Valid @RequestParam(required = false, value ="business_id") Long businessId) {
+        Order order = orderRepo.findById(orderNr)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "order not found"));
+        if (!order.getStatus().equals(StatusTypes.CLOSED)) {
+            orderService.updateOrderStatus(orderNr, status, businessId);
+            return ResponseEntity.ok("The status of your order has been successfully changed to " + status);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Once the order has been closed, it can't be reopened");
+        }
+    }
 }

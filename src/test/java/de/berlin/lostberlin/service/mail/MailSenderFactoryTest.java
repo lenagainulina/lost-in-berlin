@@ -1,8 +1,13 @@
 package de.berlin.lostberlin.service.mail;
 
+import de.berlin.lostberlin.ApplicationConfig;
+import de.berlin.lostberlin.service.mail.config.SendGridConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.*;
@@ -10,6 +15,7 @@ import static org.junit.Assert.*;
 import de.berlin.lostberlin.service.mail.exception.EmailTypeNotFoundException;
 
 @RunWith(SpringRunner.class)
+@ContextConfiguration(classes = {ApplicationConfig.class, SendGridConfiguration.class}, initializers = ConfigFileApplicationContextInitializer.class)
 @SpringBootTest
 public class MailSenderFactoryTest {
 		

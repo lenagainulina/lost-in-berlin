@@ -6,31 +6,36 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
-import de.berlin.lostberlin.model.Business;
-import de.berlin.lostberlin.repository.BusinessRepository;
+import de.berlin.lostberlin.ApplicationConfig;
+import de.berlin.lostberlin.model.order.client.OrderFullDao;
+import de.berlin.lostberlin.model.order.persistence.StatusTypes;
+import de.berlin.lostberlin.service.mail.config.SendGridConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.sendgrid.Request;
 import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
 
-import de.berlin.lostberlin.model.Order;
+import de.berlin.lostberlin.model.order.persistence.Order;
 
 @RunWith(SpringRunner.class)
+@ContextConfiguration(classes = {ApplicationConfig.class, SendGridConfiguration.class}, initializers = ConfigFileApplicationContextInitializer.class)
 @SpringBootTest
 public class MailServiceTest {
 	
 	@MockBean
-	SendGrid grid;
+	private SendGrid grid;
 	
 	@Autowired
-	MailService service;
+	private MailService service;
 
 	
 	@Test
@@ -53,7 +58,7 @@ public class MailServiceTest {
 
 	@Test
 	public void testNotificationMailSent() throws Exception{
-		Order order = createTestOrderUpdate();
+		OrderFullDao order = createTestOrderUpdate();
 
 		when(grid.api(Mockito.any(Request.class))).thenReturn(createTestResponse());
 
@@ -65,19 +70,19 @@ public class MailServiceTest {
 	
 	private Order createTestOrder() {
 		Order order = new Order();
-		order.setEmail("test@server");
+		order.setEMail("test@server");
 		order.setName("Customer Name");
 		order.setOrderNr("12123");
 		return order;
 	}
 
-	private Order createTestOrderUpdate() {
-		Order order = new Order();
-		order.setEmail("test@server");
+	private OrderFullDao createTestOrderUpdate() {
+		OrderFullDao order = new OrderFullDao();
+		order.setEMail("test@server");
 		order.setName("Customer Name");
 		order.setOrderNr("12123");
 		order.setBusinessId(1L);
-		order.setStatus("confirmed");
+		order.setStatus(StatusTypes.CONFIRMED);
 		return order;
 	}
 	

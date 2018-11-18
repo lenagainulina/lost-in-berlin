@@ -29,10 +29,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-/*
-Unfortunately, I get the same problem with @JpaAuditing annotation even after it's been externalized to ApplicationConfig file. So I had to comment it out for making tests.
-I added @ContextConfiguration because ApplicationContext could not be loaded without it.
- */
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ApplicationConfig.class, initializers = ConfigFileApplicationContextInitializer.class)

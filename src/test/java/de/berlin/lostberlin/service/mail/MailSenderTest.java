@@ -3,10 +3,14 @@ package de.berlin.lostberlin.service.mail;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.berlin.lostberlin.ApplicationConfig;
+import de.berlin.lostberlin.service.mail.config.SendGridConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.sendgrid.Content;
@@ -14,12 +18,13 @@ import com.sendgrid.Content;
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
+@ContextConfiguration(classes = {ApplicationConfig.class, SendGridConfiguration.class}, initializers = ConfigFileApplicationContextInitializer.class)
 @SpringBootTest
 public class MailSenderTest {
 	
-	private String CONFIRMATION_MAIL_TEXT = "<h1>Hi, Sergey</h1 >\nYour order has been published among the guides, you've chosen. Follow the link to check the current status of your order: https://www.lost-in-berlin.com/orders/123.";
+	private String CONFIRMATION_MAIL_TEXT = "<h1>Hi, Sergey</h1 >\nYour order has been published among the guides, you've chosen. Follow the link to check the current status of your order: https://www.de.berlin.lostberlin.com/orders/123.";
 
-	private String NOTIFICATION_MAIL_TEXT = "<h1>Hi, Lena</h1 >\nYour order has been taken by Ada Polkanova. Follow the link to check the current status of your order: https://www.lost-in-berlin.com/orders/123.";
+	private String NOTIFICATION_MAIL_TEXT = "<h1>Hi, Lena</h1 >\nYour order has been taken by Ada Polkanova. Follow the link to check the current status of your order: https://www.de.berlin.lostberlin.com/orders/123.";
 
 	@Autowired
 	ConfirmationMailSender senderConfirm;

@@ -25,17 +25,17 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<BusinessShortDao> retrieveBusinessByLocation(String serviceLocation) {
         List<BusinessShortDao> businessShortDaoList = businessRepo.getShortBusinessProfiles(serviceLocation);
-        if (businessShortDaoList.isEmpty()){
-           throw new ResourceNotFoundException("No matches for given location");
+        if (businessShortDaoList.isEmpty()) {
+            throw new ResourceNotFoundException("No matches for given location");
         }
         return businessShortDaoList;
     }
 
     @Override
-    public Business saveNewlyCreatedBusinessProfile(BusinessPostDto businessProfile)  {
+    public Business saveNewlyCreatedBusinessProfile(BusinessPostDto businessProfile) {
 
-       if(businessRepo.existsByEMail(businessProfile.getEMail())){
-        throw new EntityNotUniqueException("Email already exists");
+        if (businessRepo.existsByEMail(businessProfile.getEMail())) {
+            throw new EntityNotUniqueException("Email already exists");
         }
         Business business = new Business();
         business.setFName(businessProfile.getFName());
@@ -62,7 +62,7 @@ public class BusinessServiceImpl implements BusinessService {
         Business business = businessRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found", "business profile", id));
 
-        if(!business.getEMail().equals(businessProfile.getEMail())&&businessRepo.existsByEMail(businessProfile.getEMail())){
+        if (business.getEMail().equals(businessProfile.getEMail()) && businessRepo.existsByEMail(businessProfile.getEMail())) {
             throw new EntityNotUniqueException("Email already exists");
         }
         business.setFName(businessProfile.getFName());

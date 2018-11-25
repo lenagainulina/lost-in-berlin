@@ -94,6 +94,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                     .content(json))
                     .andExpect(status().isBadRequest());
         }
+
         @Test
         public void test_get_business_by_id_success() throws Exception {
             Business business = mockBusiness();

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
 import java.util.Date;
 
 
@@ -33,10 +34,30 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
+    @ExceptionHandler(ResourceNotSavedException.class)
+    protected ResponseEntity<Object> handleResourceNotSaved(
+            Exception ex, WebRequest request) {
+
+        ResourceNotSavedException rnsEx = (ResourceNotSavedException) ex;
+
+        return handleExceptionInternal(ex, ex.getMessage(),
+                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    @ExceptionHandler(ResourceConflictException.class)
+    protected ResponseEntity<Object> handleResourceConflict(
+            Exception ex, WebRequest request) {
+
+        ResourceConflictException rcEx = (ResourceConflictException) ex;
+
+        return handleExceptionInternal(ex, ex.getMessage(),
+                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
     @ExceptionHandler(EntityNotUniqueException.class)
     public ResponseEntity<Object> handleBadInput(
             Exception ex, WebRequest request) {
-        EntityNotUniqueException enuEx =(EntityNotUniqueException) ex;
+        EntityNotUniqueException enuEx = (EntityNotUniqueException) ex;
 
         return handleExceptionInternal(ex, ex.getMessage(),
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);

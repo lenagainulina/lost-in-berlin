@@ -1,5 +1,6 @@
 package de.berlin.lostberlin.controller;
 
+import de.berlin.lostberlin.model.order.client.OrderFullDao;
 import de.berlin.lostberlin.model.order.client.OrderPostDto;
 import de.berlin.lostberlin.model.order.client.OrderShortDao;
 import de.berlin.lostberlin.model.order.client.OrderStatusDao;
@@ -22,29 +23,29 @@ public class OrderController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity getAllOrders() {
+    public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok().body(orderService.retrieveAllOrders());
     }
 
     @GetMapping
-    public ResponseEntity getOrders(@RequestParam(value = "business_id") Long businessId) {
+    public ResponseEntity<List<OrderShortDao>> getOrders(@RequestParam(value = "business_id") Long businessId) {
         return ResponseEntity.ok().body(orderService.retrieveOrdersByBusinessId(businessId));
     }
 
     @GetMapping("/{order_number}")
-    public ResponseEntity getByOrderNr(@PathVariable(value = "order_number") String orderNr) {
+    public ResponseEntity<OrderStatusDao> getByOrderNr(@PathVariable(value = "order_number") String orderNr) {
         return ResponseEntity.ok().body(orderService.retrieveOrderByOrderNr(orderNr));
     }
 
     @PostMapping
-    public ResponseEntity createOrder(@Valid @RequestBody OrderPostDto orderProfile) {
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderPostDto orderProfile) {
         Order savedOrder = orderService.saveOrderProfile(orderProfile);
         orderService.saveChosenBusinesses(orderProfile);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
     }
 
     @PutMapping("/{order_number}/confirmation")
-    public ResponseEntity confirmOrder(
+    public ResponseEntity<OrderFullDao> confirmOrder(
             @PathVariable(value = "order_number") String orderNr,
             @Valid @RequestParam String status,
             @Valid @RequestParam(value = "business_id") Long businessId
@@ -53,7 +54,7 @@ public class OrderController {
     }
 
     @PutMapping("/{order_number}/status")
-    public ResponseEntity updateOrderStatus(
+    public ResponseEntity<String> updateOrderStatus(
             @PathVariable(value = "order_number") String orderNr,
             @Valid @RequestParam String status,
             @Valid @RequestParam(required = false, value = "business_id") Long businessId) {

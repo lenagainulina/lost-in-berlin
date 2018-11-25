@@ -1,6 +1,7 @@
 package de.berlin.lostberlin.service;
 
 import de.berlin.lostberlin.ApplicationConfig;
+import de.berlin.lostberlin.TestConfig;
 import de.berlin.lostberlin.exception.EntityNotUniqueException;
 import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
@@ -12,13 +13,26 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.validation.ValidatorFactory;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,30 +43,30 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-/*
-Unfortunately, I get the same problem with @JpaAuditing annotation even after it's been externalized to ApplicationConfig file. So I had to comment it out for making tests.
-I added @ContextConfiguration because ApplicationContext could not be loaded without it.
- */
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = ApplicationConfig.class, initializers = ConfigFileApplicationContextInitializer.class)
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
 public class BusinessServiceTest {
 
-    @MockBean
-    private BusinessRepository businessRepository;
+    @Autowired
+    BusinessService businessService;
 
-    private BusinessService businessService;
+    @TestConfiguration
+    @EnableJpaAuditing
+    public static class BusinessServiceTestConfiguration{
+        @Autowired
+        private BusinessRepository businessRepository;
 
-    @MockBean
-    ValidatorFactory factory;
-
+        @Bean
+        public BusinessService createBusinessService() {
+            return new BusinessServiceImpl(businessRepository);
+        }
+    }
 
     @Before
     public void setUp() {
-        businessService = new BusinessServiceImpl(businessRepository);
-
-        //factory = Validation.buildDefaultValidatorFactory();
+        //businessService =
     }
 
     @Test
@@ -63,12 +77,7 @@ public class BusinessServiceTest {
 
         List<BusinessShortDao> allBusinesses = singletonList(businessShortDao);
 
-        given(businessRepository.getShortBusinessProfiles(location)).willReturn(allBusinesses);
-
         List<BusinessShortDao> business = businessService.retrieveBusinessByLocation(location);
-
-        // verifies that business repository was invoked one time during the search
-        verify(businessRepository, times(1)).getShortBusinessProfiles("Berlin");
 
         assertFalse("List of businesses is empty", business.isEmpty());
         // checks that the structure has been interpreted correctly
@@ -80,19 +89,6 @@ public class BusinessServiceTest {
     }
 
     /*
-    Checks that the exception is thrown when no matching businesses for the given location can be found in the database
-     */
-    @Test(expected = ResourceNotFoundException.class)
-    public void retrieveBusinessByLocationBusinessNotFoundTest() {
-        String location = "Paris";
-        BusinessShortDao businessShortDao = mockBusinessShort();
-
-        List<BusinessShortDao> allBusinesses = singletonList(businessShortDao);
-
-        businessService.retrieveBusinessByLocation(location);
-    }
-
-    /*
     This test keeps failing, because of the NullPointer exception. I assume that I need to mock the bean validation of
     the BusinessPostDto (@NotBlank, @Email). I couldn't figure out how to do that. As fas as I understand I should mock
     Validation.buildDefaultValidatorFactory() and then make and then make an assumption in test that it returns empty
@@ -100,15 +96,10 @@ public class BusinessServiceTest {
     given(factory.getValidator().validate(businessNew)).willReturn(is(empty()));
     But perhaps I'm completely wrong and the test is failing for another reason?
      */
-    @Ignore
     @Test
     public void saveNewlyCreatedBusinessProfileTest() {
         BusinessPostDto businessNew = mockBusinessNew();
         Business originalBusinessProfile = mockBusiness();
-
-
-        given(businessRepository.existsByEMail(businessNew.getEMail())).willReturn(false);
-        given(businessRepository.save(originalBusinessProfile)).willReturn(originalBusinessProfile);
 
         Business savedBusiness = businessService.saveNewlyCreatedBusinessProfile(businessNew);
 
@@ -123,94 +114,6 @@ public class BusinessServiceTest {
         assertEquals("Username couldn't be saved", "polkaner", savedBusiness.getUsername());
     }
 
-    @Test(expected = EntityNotUniqueException.class)
-    public void saveNewlyCreatedBusinessProfileEmailAlreadyExistsTest(){
-        BusinessPostDto businessNew = mockBusinessNew();
-        given(businessRepository.existsByEMail(businessNew.getEMail())).willReturn(true);
-        businessService.saveNewlyCreatedBusinessProfile(businessNew);
-    }
-
-    @Test
-    public void retrieveBusinessByIdTest() {
-        Long id = 1L;
-        Business business = mockBusiness();
-
-        given(businessRepository.findById(id)).willReturn(Optional.of(business));
-
-        Business retrievedBusiness = businessService.retrieveBusinessById(id);
-
-        assertNotNull("No business profile with given id could be retrieved from the business repository", retrievedBusiness);
-
-        assertEquals("First name is missing", "Ada", retrievedBusiness.getFName());
-        assertEquals("Last name is missing", "Polkanova", retrievedBusiness.getLName());
-        assertEquals("Email is missing", "dogs4fun@dogmail.com", retrievedBusiness.getEMail());
-        assertEquals("Phone is missing", "017668558497", retrievedBusiness.getPhone());
-        assertEquals("Description is missing", "Hi, I'm Ada, the dog", retrievedBusiness.getDescription());
-        assertEquals("Location is missing", "berlin", retrievedBusiness.getServiceLocation());
-        assertEquals("Username is missing", "polkaner", retrievedBusiness.getUsername());
-    }
-
-    /*
-        Checks that the exception is thrown when no matching businesses  can be found in business repository by given id
-         */
-    @Test(expected = ResourceNotFoundException.class)
-    public void retrieveBusinessByIdBusinessNotFoundTest() {
-        Long id = 2L;
-        Optional <Business> business = Optional.empty();
-        given(businessRepository.findById(id)).willReturn(business);
-        businessService.retrieveBusinessById(id);
-    }
-
-    @Test
-    public void saveUpdatedBusinessProfileTest() {
-        Long id = 1L;
-        Business originalBusinessProfile = mockBusiness();
-        BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
-
-        given(businessRepository.findById(id)).willReturn(Optional.of(originalBusinessProfile));
-        given(businessRepository.save(originalBusinessProfile)).willReturn(originalBusinessProfile);
-
-        Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
-
-        assertNotNull("Updated business couldn't be saved", updBusiness);
-
-        assertEquals("Updated first name couldn't be saved", "Adelaida", updBusiness.getFName());
-        assertEquals("Updated last name couldn't be saved", "Polkanova", updBusiness.getLName());
-        assertEquals("Updated email couldn't be saved", "polkan@dogsrgods.com", updBusiness.getEMail());
-        assertEquals("Updated phone couldn't be saved", "017628834523", updBusiness.getPhone());
-        assertEquals("Updated description couldn't be saved", "Hi, I'm Ada, the hairiest guide in Berlin", updBusiness.getDescription());
-        assertEquals("Updated service location couldn't be saved", "Charlottenburg", updBusiness.getServiceLocation());
-        assertEquals("Updated username couldn't be saved", "polkan", updBusiness.getUsername());
-        assertEquals("Updated photo couldn't be saved", null, updBusiness.getPhoto()); //no logic for updating photo yet.
-        //no logic for updating password yet. Perhaps, it should be a separate update procedure. It will be added after introducing general authentification logic.
-
-    }
-
-    /*
-        Checks that the exception is thrown when no matching business can be found  in business repository by given id
-         */
-    @Test(expected = ResourceNotFoundException.class)
-    public void saveUpdatedBusinessProfileNotFoundTest() {
-        Long id = 2L;
-        BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
-        Optional <Business> business = Optional.empty();
-        given(businessRepository.findById(id)).willReturn(business);
-
-        Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
-    }
-
-    @Test (expected = EntityNotUniqueException.class)
-    public void saveUpdatedBusinessProfileEmailAlreadyExistsTest(){
-        Long id = 1L;
-        Business originalBusinessProfile = mockBusiness();
-        BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
-
-        given(businessRepository.findById(id)).willReturn(java.util.Optional.ofNullable(originalBusinessProfile));
-        assumeThat(originalBusinessProfile.getEMail().equals(businessUpdateDto.getEMail()));
-        given(businessRepository.existsByEMail(businessUpdateDto.getEMail())).willReturn(true);
-
-        Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
-    }
 
     private BusinessShortDao mockBusinessShort() {
         BusinessShortDao businessShort = new BusinessShortDao();
@@ -232,7 +135,7 @@ public class BusinessServiceTest {
         businessNew.setServiceLocation("berlin");
         businessNew.setUsername("polkaner");
         businessNew.setPassword("bones");
-    //    businessNew.setPhoto(null);
+        //    businessNew.setPhoto(null);
         return businessNew;
     }
 
@@ -251,18 +154,20 @@ public class BusinessServiceTest {
     }
 
     private Business mockBusiness() {
-            Business business = new Business();
-            business.setId(1L);
-            business.setFName(mockBusinessNew().getFName());
-            business.setLName(mockBusinessNew().getLName());
-            business.setEMail(mockBusinessNew().getEMail());
-            business.setPhone(mockBusinessNew().getPhone());
-            business.setDescription(mockBusinessNew().getDescription());
-            business.setServiceLocation(mockBusinessNew().getServiceLocation());
-            business.setUsername(mockBusinessNew().getUsername());
-            business.setPassword(mockBusinessNew().getPassword());
-            business.setPhoto(mockBusinessNew().getPhoto());
-            return business;
+        Business business = new Business();
+        business.setId(1L);
+        business.setFName(mockBusinessNew().getFName());
+        business.setLName(mockBusinessNew().getLName());
+        business.setEMail(mockBusinessNew().getEMail());
+        business.setPhone(mockBusinessNew().getPhone());
+        business.setDescription(mockBusinessNew().getDescription());
+        business.setServiceLocation(mockBusinessNew().getServiceLocation());
+        business.setUsername(mockBusinessNew().getUsername());
+        business.setPassword(mockBusinessNew().getPassword());
+        business.setPhoto(mockBusinessNew().getPhoto());
+        business.setCreatedAt(new Date());
+
+        return business;
     }
 
 }

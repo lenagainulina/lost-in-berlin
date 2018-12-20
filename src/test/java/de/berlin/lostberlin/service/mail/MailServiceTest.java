@@ -46,11 +46,6 @@ public class MailServiceTest {
     }
 
     @Test
-    public void testConfirmationMailNotSent() {
-
-    }
-
-    @Test
     public void testNotificationMailSent() throws Exception {
         OrderFullDao order = createTestOrderUpdate();
 

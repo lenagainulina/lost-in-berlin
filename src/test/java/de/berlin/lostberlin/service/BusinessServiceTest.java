@@ -28,11 +28,6 @@ public class BusinessServiceTest {
     @Autowired
     private BusinessService businessService;
 
-    @Before
-    public void setUp() {
-        businessService = new BusinessServiceImpl(businessRepo);
-    }
-
     @Test
     public void retrieveBusinessByLocationTest() {
         String location = "Berlin";

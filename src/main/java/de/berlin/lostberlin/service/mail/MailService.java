@@ -1,5 +1,6 @@
 package de.berlin.lostberlin.service.mail;
 
+import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.model.order.persistence.Order;
 import de.berlin.lostberlin.model.order.client.OrderFullDao;
@@ -50,11 +51,8 @@ public class MailService {
     }
 
     private Params createNotificationMailParams(OrderFullDao order) {
-        Business business;
-        Optional result = businessRepo.findById(order.getBusinessId());
-
-        business = (Business) result.get();
-
+        Business business = businessRepo.findById(order.getBusinessId())
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
         String subject = "Lost in Berlin order Notification Mail";
         String toMail = order.getEMail();
         Map<String, String> map = new HashMap<>();
@@ -64,4 +62,6 @@ public class MailService {
 
         return new Params(fromMail, toMail, subject, map);
     }
+
+
 }

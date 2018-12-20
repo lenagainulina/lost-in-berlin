@@ -80,17 +80,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(StatusTypes.PENDING);
         orderRepo.save(order);
 
-        Order result = order;
+        mailService.sendConfirmationMail(order);
 
-        if (result != null) {
-            try {
-                mailService.sendConfirmationMail(result);
-            } catch (Exception e) {
-                e.getMessage();
-            }
-        } else {
-            throw new ResourceNotSavedException("Failed to save", "order profile", orderProfile.getEMail());
-        }
         return order;
     }
 

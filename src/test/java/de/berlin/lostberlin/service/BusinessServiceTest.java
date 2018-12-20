@@ -1,6 +1,5 @@
 package de.berlin.lostberlin.service;
 
-import de.berlin.lostberlin.ApplicationConfig;
 import de.berlin.lostberlin.exception.EntityNotUniqueException;
 import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
@@ -9,106 +8,50 @@ import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
 import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.repository.BusinessRepository;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.validation.ValidatorFactory;
 import java.util.List;
-import java.util.Optional;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-/*
-Unfortunately, I get the same problem with @JpaAuditing annotation even after it's been externalized to ApplicationConfig file. So I had to comment it out for making tests.
-I added @ContextConfiguration because ApplicationContext could not be loaded without it.
- */
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = ApplicationConfig.class, initializers = ConfigFileApplicationContextInitializer.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class BusinessServiceTest {
 
-    @MockBean
-    private BusinessRepository businessRepository;
+    @Autowired
+    private BusinessRepository businessRepo;
 
+    @Autowired
     private BusinessService businessService;
-
-    @MockBean
-    ValidatorFactory factory;
-
-
-    @Before
-    public void setUp() {
-        businessService = new BusinessServiceImpl(businessRepository);
-
-        //factory = Validation.buildDefaultValidatorFactory();
-    }
 
     @Test
     public void retrieveBusinessByLocationTest() {
-
         String location = "Berlin";
-        BusinessShortDao businessShortDao = mockBusinessShort();
 
-        List<BusinessShortDao> allBusinesses = singletonList(businessShortDao);
-
-        given(businessRepository.getShortBusinessProfiles(location)).willReturn(allBusinesses);
-
-        List<BusinessShortDao> business = businessService.retrieveBusinessByLocation(location);
-
-        // verifies that business repository was invoked one time during the search
-        verify(businessRepository, times(1)).getShortBusinessProfiles("Berlin");
+        List<BusinessShortDao> business = businessRepo.getShortBusinessProfiles(location);
 
         assertFalse("List of businesses is empty", business.isEmpty());
-        // checks that the structure has been interpreted correctly
-        assertEquals("First name of the first object in the list is missing", "Ada", business.get(0).getFName());
-        assertEquals("Last name of the first object in the list is missing", "Polkanova", business.get(0).getLName());
-        assertEquals("Description of the first object in the list is missing", "Hi, I'm Ada, the dog", business.get(0).getDescription());
-        assertEquals("Location of the first object in the list is missing", "berlin", business.get(0).getServiceLocation());
-        assertEquals("Photo of the first object in the list is missing", null, business.get(0).getPhoto());
+
+        assertEquals("First name of the first object in the list is missing", "Ada", business.get(3).getFName());
+        assertEquals("Last name of the first object in the list is missing", "Polkanova", business.get(3).getLName());
+        assertEquals("Description of the first object in the list is missing", "Hi, I'm Ada, the dog", business.get(3).getDescription());
+        assertEquals("Location of the first object in the list is missing", "berlin", business.get(3).getServiceLocation());
+        assertEquals("Photo of the first object in the list is missing", null, business.get(3).getPhoto());
     }
 
-    /*
-    Checks that the exception is thrown when no matching businesses for the given location can be found in the database
-     */
     @Test(expected = ResourceNotFoundException.class)
     public void retrieveBusinessByLocationBusinessNotFoundTest() {
         String location = "Paris";
-        BusinessShortDao businessShortDao = mockBusinessShort();
-
-        List<BusinessShortDao> allBusinesses = singletonList(businessShortDao);
-
         businessService.retrieveBusinessByLocation(location);
     }
 
-    /*
-    This test keeps failing, because of the NullPointer exception. I assume that I need to mock the bean validation of
-    the BusinessPostDto (@NotBlank, @Email). I couldn't figure out how to do that. As fas as I understand I should mock
-    Validation.buildDefaultValidatorFactory() and then make and then make an assumption in test that it returns empty
-    set of ConstraintViolations. I couldn't figure out how to do it correct, keep getting an NPE when I try the following:
-    given(factory.getValidator().validate(businessNew)).willReturn(is(empty()));
-    But perhaps I'm completely wrong and the test is failing for another reason?
-     */
-    @Ignore
     @Test
     public void saveNewlyCreatedBusinessProfileTest() {
         BusinessPostDto businessNew = mockBusinessNew();
-        Business originalBusinessProfile = mockBusiness();
-
-
-        given(businessRepository.existsByEMail(businessNew.getEMail())).willReturn(false);
-        given(businessRepository.save(originalBusinessProfile)).willReturn(originalBusinessProfile);
 
         Business savedBusiness = businessService.saveNewlyCreatedBusinessProfile(businessNew);
 
@@ -124,19 +67,14 @@ public class BusinessServiceTest {
     }
 
     @Test(expected = EntityNotUniqueException.class)
-    public void saveNewlyCreatedBusinessProfileEmailAlreadyExistsTest(){
+    public void saveNewlyCreatedBusinessProfileEmailAlreadyExistsTest() {
         BusinessPostDto businessNew = mockBusinessNew();
-        given(businessRepository.existsByEMail(businessNew.getEMail())).willReturn(true);
         businessService.saveNewlyCreatedBusinessProfile(businessNew);
     }
 
     @Test
     public void retrieveBusinessByIdTest() {
-        Long id = 1L;
-        Business business = mockBusiness();
-
-        given(businessRepository.findById(id)).willReturn(Optional.of(business));
-
+        Long id = 4L;
         Business retrievedBusiness = businessService.retrieveBusinessById(id);
 
         assertNotNull("No business profile with given id could be retrieved from the business repository", retrievedBusiness);
@@ -150,25 +88,17 @@ public class BusinessServiceTest {
         assertEquals("Username is missing", "polkaner", retrievedBusiness.getUsername());
     }
 
-    /*
-        Checks that the exception is thrown when no matching businesses  can be found in business repository by given id
-         */
     @Test(expected = ResourceNotFoundException.class)
     public void retrieveBusinessByIdBusinessNotFoundTest() {
-        Long id = 2L;
-        Optional <Business> business = Optional.empty();
-        given(businessRepository.findById(id)).willReturn(business);
+        Long id = 12L;
         businessService.retrieveBusinessById(id);
     }
 
     @Test
     public void saveUpdatedBusinessProfileTest() {
-        Long id = 1L;
-        Business originalBusinessProfile = mockBusiness();
-        BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
+        Long id = 4L;
 
-        given(businessRepository.findById(id)).willReturn(Optional.of(originalBusinessProfile));
-        given(businessRepository.save(originalBusinessProfile)).willReturn(originalBusinessProfile);
+        BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
 
         Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
 
@@ -186,40 +116,19 @@ public class BusinessServiceTest {
 
     }
 
-    /*
-        Checks that the exception is thrown when no matching business can be found  in business repository by given id
-         */
     @Test(expected = ResourceNotFoundException.class)
     public void saveUpdatedBusinessProfileNotFoundTest() {
-        Long id = 2L;
+        Long id = 12L;
         BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
-        Optional <Business> business = Optional.empty();
-        given(businessRepository.findById(id)).willReturn(business);
-
         Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
     }
 
-    @Test (expected = EntityNotUniqueException.class)
-    public void saveUpdatedBusinessProfileEmailAlreadyExistsTest(){
-        Long id = 1L;
-        Business originalBusinessProfile = mockBusiness();
+    @Test(expected = EntityNotUniqueException.class)
+    public void saveUpdatedBusinessProfileEmailAlreadyExistsTest() {
+        Long id = 4L;
         BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
 
-        given(businessRepository.findById(id)).willReturn(java.util.Optional.ofNullable(originalBusinessProfile));
-        assumeThat(originalBusinessProfile.getEMail().equals(businessUpdateDto.getEMail()));
-        given(businessRepository.existsByEMail(businessUpdateDto.getEMail())).willReturn(true);
-
         Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
-    }
-
-    private BusinessShortDao mockBusinessShort() {
-        BusinessShortDao businessShort = new BusinessShortDao();
-        businessShort.setFName(mockBusiness().getFName());
-        businessShort.setLName(mockBusiness().getLName());
-        businessShort.setDescription(mockBusiness().getDescription());
-        businessShort.setServiceLocation(mockBusiness().getServiceLocation());
-        businessShort.setPhoto(mockBusiness().getPhoto());
-        return businessShort;
     }
 
     private BusinessPostDto mockBusinessNew() {
@@ -232,7 +141,7 @@ public class BusinessServiceTest {
         businessNew.setServiceLocation("berlin");
         businessNew.setUsername("polkaner");
         businessNew.setPassword("bones");
-    //    businessNew.setPhoto(null);
+        //    businessNew.setPhoto(null);
         return businessNew;
     }
 
@@ -248,21 +157,6 @@ public class BusinessServiceTest {
         businessUpdate.setPhoto(null);
 
         return businessUpdate;
-    }
-
-    private Business mockBusiness() {
-            Business business = new Business();
-            business.setId(1L);
-            business.setFName(mockBusinessNew().getFName());
-            business.setLName(mockBusinessNew().getLName());
-            business.setEMail(mockBusinessNew().getEMail());
-            business.setPhone(mockBusinessNew().getPhone());
-            business.setDescription(mockBusinessNew().getDescription());
-            business.setServiceLocation(mockBusinessNew().getServiceLocation());
-            business.setUsername(mockBusinessNew().getUsername());
-            business.setPassword(mockBusinessNew().getPassword());
-            business.setPhoto(mockBusinessNew().getPhoto());
-            return business;
     }
 
 }

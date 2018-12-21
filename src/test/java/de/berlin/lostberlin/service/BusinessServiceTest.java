@@ -5,6 +5,7 @@ import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
 import de.berlin.lostberlin.model.business.client.BusinessShortDao;
 import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
+import de.berlin.lostberlin.model.business.client.BusinessUpdatePhotoDto;
 import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.repository.BusinessRepository;
 import org.junit.Before;
@@ -38,8 +39,8 @@ public class BusinessServiceTest {
 
         assertEquals("First name of the first object in the list is missing", "Ada", business.get(3).getFName());
         assertEquals("Last name of the first object in the list is missing", "Polkanova", business.get(3).getLName());
-        assertEquals("Description of the first object in the list is missing", "Hi, I'm Ada, the dog", business.get(3).getDescription());
-        assertEquals("Location of the first object in the list is missing", "berlin", business.get(3).getServiceLocation());
+        assertEquals("Description of the first object in the list is missing", "Hi, I'm Ada, the dog.", business.get(3).getDescription());
+        assertEquals("Location of the first object in the list is missing", "Berlin", business.get(3).getServiceLocation());
         assertEquals("Photo of the first object in the list is missing", null, business.get(3).getPhoto());
     }
 
@@ -59,7 +60,7 @@ public class BusinessServiceTest {
 
         assertEquals("First name couldn't be saved", "Ada", savedBusiness.getFName());
         assertEquals("Last name couldn't be saved", "Polkanova", savedBusiness.getLName());
-        assertEquals("Email name couldn't be saved", "dogs4fun@dogmail.com", savedBusiness.getEMail());
+        assertEquals("Email name couldn't be saved", "dogsledging@doggy.de", savedBusiness.getEMail());
         assertEquals("Phone name couldn't be saved", "017668558497", savedBusiness.getPhone());
         assertEquals("Description couldn't be saved", "Hi, I'm Ada, the dog", savedBusiness.getDescription());
         assertEquals("Location couldn't be saved", "berlin", savedBusiness.getServiceLocation());
@@ -74,14 +75,14 @@ public class BusinessServiceTest {
 
     @Test
     public void retrieveBusinessByIdTest() {
-        Long id = 4L;
+        Long id = 5L;
         Business retrievedBusiness = businessService.retrieveBusinessById(id);
 
         assertNotNull("No business profile with given id could be retrieved from the business repository", retrievedBusiness);
 
         assertEquals("First name is missing", "Ada", retrievedBusiness.getFName());
         assertEquals("Last name is missing", "Polkanova", retrievedBusiness.getLName());
-        assertEquals("Email is missing", "dogs4fun@dogmail.com", retrievedBusiness.getEMail());
+        assertEquals("Email is missing", "dogsledging@doggy.de", retrievedBusiness.getEMail());
         assertEquals("Phone is missing", "017668558497", retrievedBusiness.getPhone());
         assertEquals("Description is missing", "Hi, I'm Ada, the dog", retrievedBusiness.getDescription());
         assertEquals("Location is missing", "berlin", retrievedBusiness.getServiceLocation());
@@ -93,6 +94,20 @@ public class BusinessServiceTest {
         Long id = 12L;
         businessService.retrieveBusinessById(id);
     }
+
+    @Test
+    public void savePartiallyUpdatedBusinessProfileTest(){
+        Long id = 4L;
+
+        BusinessUpdatePhotoDto businessUpdatePhotoDto = mockBusinessPhotoUpdate();
+
+        Business updBusiness = businessService.savePartiallyUpdatedBusinessProfile(id, businessUpdatePhotoDto);
+
+        assertNotNull("Updated business couldn't be saved", updBusiness);
+        assertEquals("Updated photo couldn't be saved", "97d90e9f4692e6a.png", updBusiness.getPhoto());
+
+    }
+
 
     @Test
     public void saveUpdatedBusinessProfileTest() {
@@ -111,7 +126,7 @@ public class BusinessServiceTest {
         assertEquals("Updated description couldn't be saved", "Hi, I'm Ada, the hairiest guide in Berlin", updBusiness.getDescription());
         assertEquals("Updated service location couldn't be saved", "Charlottenburg", updBusiness.getServiceLocation());
         assertEquals("Updated username couldn't be saved", "polkan", updBusiness.getUsername());
-        assertEquals("Updated photo couldn't be saved", null, updBusiness.getPhoto()); //no logic for updating photo yet.
+        assertEquals("Updated photo couldn't be saved", "97d90e9f4692e6a.png", updBusiness.getPhoto());
         //no logic for updating password yet. Perhaps, it should be a separate update procedure. It will be added after introducing general authentification logic.
 
     }
@@ -135,28 +150,34 @@ public class BusinessServiceTest {
         BusinessPostDto businessNew = new BusinessPostDto();
         businessNew.setFName("Ada");
         businessNew.setLName("Polkanova");
-        businessNew.setEMail("dogs4fun@dogmail.com");
+        businessNew.setEMail("dogsledging@doggy.de");
         businessNew.setPhone("017668558497");
         businessNew.setDescription("Hi, I'm Ada, the dog");
         businessNew.setServiceLocation("berlin");
         businessNew.setUsername("polkaner");
         businessNew.setPassword("bones");
-        //    businessNew.setPhoto(null);
+        businessNew.setPhoto(null);
         return businessNew;
     }
 
     private BusinessUpdateDto mockBusinessUpdate() {
         BusinessUpdateDto businessUpdate = new BusinessUpdateDto();
         businessUpdate.setFName("Adelaida");
-        businessUpdate.setLName("Polkanova");
+        businessUpdate.setLName(null);
         businessUpdate.setEMail("polkan@dogsrgods.com");
         businessUpdate.setPhone("017628834523");
         businessUpdate.setDescription("Hi, I'm Ada, the hairiest guide in Berlin");
         businessUpdate.setServiceLocation("Charlottenburg");
         businessUpdate.setUsername("polkan");
-        businessUpdate.setPhoto(null);
+        businessUpdate.setPhoto("97d90e9f4692e6a.png");
 
         return businessUpdate;
     }
 
+    private BusinessUpdatePhotoDto mockBusinessPhotoUpdate() {
+        BusinessUpdatePhotoDto businessPhotoUpdate = new BusinessUpdatePhotoDto();
+        businessPhotoUpdate.setPhoto("97d90e9f4692e6a.png");
+
+        return businessPhotoUpdate;
+    }
 }

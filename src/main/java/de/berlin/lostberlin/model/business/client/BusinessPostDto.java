@@ -26,7 +26,7 @@ public class BusinessPostDto {
 
     private String serviceLocation;
 
-    private byte[] photo;
+    private String photo;
 
     @NotBlank
     private String username;

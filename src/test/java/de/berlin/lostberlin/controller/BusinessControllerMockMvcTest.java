@@ -4,34 +4,40 @@ import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
 import de.berlin.lostberlin.model.business.client.BusinessShortDao;
 import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
+import de.berlin.lostberlin.model.business.client.BusinessUpdatePhotoDto;
 import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.service.BusinessServiceImpl;
+import de.berlin.lostberlin.service.fileUpload.FileServiceImpl;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-    @RunWith(SpringRunner.class)
+@RunWith(SpringRunner.class)
     @WebAppConfiguration
     @WebMvcTest(BusinessController.class)
     public class BusinessControllerMockMvcTest {
@@ -43,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         @MockBean
         private BusinessServiceImpl businessService;
+
+        @MockBean
+        private FileServiceImpl fileService;
 
         @Test
         public void test_get_businesses_success() throws Exception {
@@ -121,7 +130,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                     .andDo(print());
         }
         @Test
-        public void test_update_business_success() throws Exception {
+        public void test_update_business_fully_success() throws Exception {
             BusinessUpdateDto businessUpdate = mockBusinessUpdate();
             Business business = mockBusiness();
             Business updatedBusiness = mockUpdatedBusiness();
@@ -141,7 +150,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         }
 
         @Test
-        public void test_update_business_not_found() throws Exception {
+        public void test_update_business_fully_not_found() throws Exception {
             BusinessUpdateDto businessUpdate = mockBusinessUpdate();
             String json = mapper.writeValueAsString(businessUpdate);
             when(this.businessService.saveUpdatedBusinessProfile(2L, businessUpdate)).thenThrow(new ResourceNotFoundException("Not found", "business profile", 2L));
@@ -151,6 +160,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                     .andExpect(status().isNotFound())
                     .andDo(print());
         }
+
+        @Test
+        public void test_update_business_partially_success() throws Exception {
+            BusinessUpdatePhotoDto businessUpdate = mockBusinessUpdatePhoto();
+            Business business = mockBusiness();
+            Business updatedBusiness = mockPartiallyUpdatedBusiness();
+            String json = mapper.writeValueAsString(businessUpdate);
+            when(this.businessService.savePartiallyUpdatedBusinessProfile(business.getId(), businessUpdate)).thenReturn(updatedBusiness);
+            mvc.perform(patch("/businesses/{id}", business.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.photo").value(updatedBusiness.getPhoto()));
+        }
+
+        @Test
+        public void test_update_business_partially_not_found() throws Exception {
+            BusinessUpdatePhotoDto businessUpdate = mockBusinessUpdatePhoto();
+            String json = mapper.writeValueAsString(businessUpdate);
+            when(this.businessService.savePartiallyUpdatedBusinessProfile(2L, businessUpdate))
+                    .thenThrow(new ResourceNotFoundException("Not found", "business profile", 2L));
+            mvc.perform(patch("/businesses/{id}", 2)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json))
+                    .andExpect(status().isNotFound())
+                    .andDo(print());
+        }
+
+        @Test
+        public void test_upload_file_success() throws Exception {
+            MockMultipartFile multipartFile = new MockMultipartFile("file", "97d90e9f4692e6a.png",
+                    "image/png", "Spring Framework".getBytes());
+            this.mvc.perform(MockMvcRequestBuilders.multipart("/businesses/{id}/uploadFile", 2).file(multipartFile))
+                    .andExpect(status().isOk());
+
+            BDDMockito.then(this.fileService).should().storeFile(multipartFile);
+        }
+
+        @Test
+        public void test_serve_file_not_found() throws Exception {
+            given(this.fileService.loadFileAsResource("97d90e9f4692e.png"))
+                    .willThrow(ResourceNotFoundException.class);
+
+            this.mvc.perform(get("/businesses/files/97d90e9f4692e.png")).andExpect(status().isNotFound());
+        }
+
+
         private BusinessShortDao mockBusinessShort() {
             BusinessShortDao businessShort = new BusinessShortDao();
             businessShort.setFName(mockBusiness().getFName());
@@ -174,12 +230,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             return businessNew;
         }
 
+
+
         private BusinessUpdateDto mockBusinessUpdate() {
             BusinessUpdateDto businessUpdate = new BusinessUpdateDto();
             businessUpdate.setFName("Adelaida");
             businessUpdate.setLName("Polkanova");
             businessUpdate.setEMail("polkan@dogsrgods.com");
             return businessUpdate;
+        }
+
+        private BusinessUpdatePhotoDto mockBusinessUpdatePhoto() {
+            BusinessUpdatePhotoDto businessUpdatePhoto = new BusinessUpdatePhotoDto();
+            businessUpdatePhoto.setPhoto("97d90e9f4692e6a.png");
+            return businessUpdatePhoto;
+        }
+
+        private Business mockPartiallyUpdatedBusiness() {
+            Business business = new Business();
+            business.setPhoto(mockBusinessUpdatePhoto().getPhoto());
+            business.setId(mockBusiness().getId());
+            business.setFName(mockBusiness().getFName());
+            business.setLName(mockBusiness().getLName());
+            business.setEMail(mockBusiness().getEMail());
+            business.setPhone(mockBusiness().getPhone());
+            business.setDescription(mockBusiness().getDescription());
+            business.setServiceLocation(mockBusiness().getServiceLocation());
+            business.setUsername(mockBusiness().getUsername());
+            business.setPassword(mockBusiness().getPassword());
+            return business;
         }
 
         private Business mockUpdatedBusiness() {

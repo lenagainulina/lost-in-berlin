@@ -24,7 +24,7 @@ public class BusinessUpdateDto {
 
     private String serviceLocation;
 
-    private byte[] photo;
+    private String photo;
 
     private String username;
 

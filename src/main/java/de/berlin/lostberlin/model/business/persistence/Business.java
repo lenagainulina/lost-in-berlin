@@ -40,7 +40,7 @@ public class Business implements Serializable {
 
     private String serviceLocation;
 
-    private byte[] photo;
+    private String photo;
 
     private String username;
 

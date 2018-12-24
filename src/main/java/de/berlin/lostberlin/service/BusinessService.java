@@ -1,9 +1,10 @@
 package de.berlin.lostberlin.service;
 
-import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
 import de.berlin.lostberlin.model.business.client.BusinessShortDao;
 import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
+import de.berlin.lostberlin.model.business.client.BusinessUpdatePhotoDto;
+import de.berlin.lostberlin.model.business.persistence.Business;
 
 import java.util.List;
 
@@ -42,4 +43,13 @@ public interface BusinessService {
      * @return {@link Business} object with updated business profile details
      */
     Business saveUpdatedBusinessProfile(Long id, BusinessUpdateDto businessProfile);
+
+    /**
+     *
+     * @param id business id
+     * @param photoFilePath updated profile photo filepath
+     * @return (@link Business) object with updated profile photo file path.
+     */
+    Business savePartiallyUpdatedBusinessProfile(Long id, BusinessUpdatePhotoDto photoFilePath);
+
 }

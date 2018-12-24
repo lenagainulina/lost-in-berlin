@@ -18,5 +18,5 @@ public class BusinessShortDao {
 
     private String serviceLocation;
 
-    private byte[] photo;
+    private String photo;
 }

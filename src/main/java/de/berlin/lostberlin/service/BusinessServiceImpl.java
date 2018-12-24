@@ -2,10 +2,11 @@ package de.berlin.lostberlin.service;
 
 import de.berlin.lostberlin.exception.EntityNotUniqueException;
 import de.berlin.lostberlin.exception.ResourceNotFoundException;
-import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.model.business.client.BusinessPostDto;
 import de.berlin.lostberlin.model.business.client.BusinessShortDao;
 import de.berlin.lostberlin.model.business.client.BusinessUpdateDto;
+import de.berlin.lostberlin.model.business.client.BusinessUpdatePhotoDto;
+import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.repository.BusinessRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,15 +66,40 @@ public class BusinessServiceImpl implements BusinessService {
         if (business.getEMail().equals(businessProfile.getEMail()) && businessRepo.existsByEMail(businessProfile.getEMail())) {
             throw new EntityNotUniqueException("Email already exists");
         }
-        business.setFName(businessProfile.getFName());
-        business.setLName(businessProfile.getLName());
-        business.setEMail(businessProfile.getEMail());
-        business.setPhone(businessProfile.getPhone());
-        business.setDescription(businessProfile.getDescription());
-        business.setServiceLocation(businessProfile.getServiceLocation());
-        business.setPhoto(businessProfile.getPhoto());
-        business.setUsername(businessProfile.getUsername());
+        if(businessProfile.getFName()!=null){
+        business.setFName(businessProfile.getFName());}
 
+        if(businessProfile.getLName()!=null){
+        business.setLName(businessProfile.getLName());}
+
+        if(businessProfile.getEMail()!=null){
+        business.setEMail(businessProfile.getEMail());}
+
+        if(businessProfile.getPhone()!=null){
+        business.setPhone(businessProfile.getPhone());}
+
+        if(businessProfile.getDescription()!=null){
+        business.setDescription(businessProfile.getDescription());}
+
+        if(businessProfile.getServiceLocation()!=null){
+        business.setServiceLocation(businessProfile.getServiceLocation());}
+
+        if(businessProfile.getPhoto()!=null){
+        business.setPhoto(businessProfile.getPhoto());}
+
+        if(businessProfile.getUsername()!=null){
+        business.setUsername(businessProfile.getUsername());}
+
+        return businessRepo.save(business);
+    }
+
+    @Override
+    public Business savePartiallyUpdatedBusinessProfile(Long id, BusinessUpdatePhotoDto photoFilePath) {
+        Business business = businessRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found", "business profile", id));
+        if(photoFilePath!=null){
+            business.setPhoto(photoFilePath.getPhoto());
+        }
         return businessRepo.save(business);
     }
 }

@@ -66,29 +66,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (business.getEMail().equals(businessProfile.getEMail()) && businessRepo.existsByEMail(businessProfile.getEMail())) {
             throw new EntityNotUniqueException("Email already exists");
         }
-        if(businessProfile.getFName()!=null){
-        business.setFName(businessProfile.getFName());}
-
-        if(businessProfile.getLName()!=null){
-        business.setLName(businessProfile.getLName());}
-
-        if(businessProfile.getEMail()!=null){
-        business.setEMail(businessProfile.getEMail());}
-
-        if(businessProfile.getPhone()!=null){
-        business.setPhone(businessProfile.getPhone());}
-
-        if(businessProfile.getDescription()!=null){
-        business.setDescription(businessProfile.getDescription());}
-
-        if(businessProfile.getServiceLocation()!=null){
-        business.setServiceLocation(businessProfile.getServiceLocation());}
-
-        if(businessProfile.getPhoto()!=null){
-        business.setPhoto(businessProfile.getPhoto());}
-
-        if(businessProfile.getUsername()!=null){
-        business.setUsername(businessProfile.getUsername());}
+        updateNotEmptyFields(businessProfile, business);
 
         return businessRepo.save(business);
     }
@@ -101,5 +79,32 @@ public class BusinessServiceImpl implements BusinessService {
             business.setPhoto(photoFilePath.getPhoto());
         }
         return businessRepo.save(business);
+    }
+
+    private void updateNotEmptyFields (BusinessUpdateDto businessProfile, Business business){
+
+        if(businessProfile.getFName()!=null){
+            business.setFName(businessProfile.getFName());}
+
+        if(businessProfile.getLName()!=null){
+            business.setLName(businessProfile.getLName());}
+
+        if(businessProfile.getEMail()!=null){
+            business.setEMail(businessProfile.getEMail());}
+
+        if(businessProfile.getPhone()!=null){
+            business.setPhone(businessProfile.getPhone());}
+
+        if(businessProfile.getDescription()!=null){
+            business.setDescription(businessProfile.getDescription());}
+
+        if(businessProfile.getServiceLocation()!=null){
+            business.setServiceLocation(businessProfile.getServiceLocation());}
+
+        if(businessProfile.getPhoto()!=null){
+            business.setPhoto(businessProfile.getPhoto());}
+
+        if(businessProfile.getUsername()!=null){
+            business.setUsername(businessProfile.getUsername());}
     }
 }

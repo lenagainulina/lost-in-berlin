@@ -47,20 +47,10 @@ public class FileServiceImpl implements FileService {
     @Override
     public void storeFile(MultipartFile file) {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-
-        try {
-            if (file.isEmpty()) {
-                throw new ResourceNotSavedException("Failed to store empty file " + fileName);
-            }
-
-            if (fileName.contains("..")) {
-                throw new ResourceNotSavedException("Sorry! Filename contains invalid path sequence " + fileName);
-            }
-
-            try (InputStream inputStream = file.getInputStream()) {
+        validateFile(file, fileName);
+        try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, this.rootLocation.resolve(fileName),
                         StandardCopyOption.REPLACE_EXISTING);
-            }
         }catch (IOException ex) {
             throw new ResourceNotSavedException("Could not store file " + fileName + ". Please try again!");
         }
@@ -85,4 +75,16 @@ public class FileServiceImpl implements FileService {
     public void deleteAllFiles() {
         FileSystemUtils.deleteRecursively(rootLocation.toFile());
     }
+
+
+    private void validateFile(MultipartFile file, String fileName){
+        if (file.isEmpty()) {
+            throw new ResourceNotSavedException("Failed to store empty file " + fileName);
+        }
+        if (fileName.contains("..")) {
+            throw new ResourceNotSavedException("Sorry! Filename contains invalid path sequence " + fileName);
+        }
+    }
+
 }
+

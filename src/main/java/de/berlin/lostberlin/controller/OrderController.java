@@ -40,7 +40,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderPostDto orderProfile) {
         Order savedOrder = orderService.saveOrderProfile(orderProfile);
-        orderService.saveChosenBusinesses(orderProfile);
+        orderService.saveChosenBusinesses(savedOrder,orderProfile.getChosenBusinessIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
     }
 

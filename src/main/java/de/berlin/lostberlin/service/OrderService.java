@@ -49,10 +49,11 @@ public interface OrderService {
     /**
      * Saves business ids chosen in a newly created order profile to chosenBusinessIds repository
      *
-     * @param orderProfile newly created order profile
+     * @param order newly created order profile
+     * @param chosenBusinessIds ids of chosen businesses
      * @return {@link ChosenBusiness} object with chosen business ids
      */
-    ChosenBusiness saveChosenBusinesses(OrderPostDto orderProfile);
+    ChosenBusiness saveChosenBusinesses(Order order, Long[] chosenBusinessIds);
 
     /**
      * Saves an order profile with an updated status and assigned business id to order repository

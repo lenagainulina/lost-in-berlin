@@ -12,7 +12,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -20,28 +25,49 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class BusinessServiceTest {
 
-    @Autowired
-    private BusinessRepository businessRepo;
+    @TestConfiguration
+    @EnableJpaAuditing
+    public static class BusinessServiceTestConfiguration {
+        @Autowired
+        private BusinessRepository businessRepository;
+
+        @Bean
+        public BusinessService createBusinessService() {
+            return new BusinessServiceImpl(businessRepository);
+        }
+    }
 
     @Autowired
     private BusinessService businessService;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
+    private Business testBusiness;
+
+    @Before
+    public void setUp() {
+        testBusiness = mockBusiness();
+        entityManager.persist(testBusiness);
+    }
+
+
     @Test
     public void retrieveBusinessByLocationTest() {
         String location = "Berlin";
-
-        List<BusinessShortDao> business = businessRepo.getShortBusinessProfiles(location);
+        List<BusinessShortDao> business = businessService.retrieveBusinessByLocation(location);
 
         assertFalse("List of businesses is empty", business.isEmpty());
 
-        assertEquals("First name of the first object in the list is missing", "Ada", business.get(3).getFName());
-        assertEquals("Last name of the first object in the list is missing", "Polkanova", business.get(3).getLName());
-        assertEquals("Description of the first object in the list is missing", "Hi, I'm Ada, the dog.", business.get(3).getDescription());
-        assertEquals("Location of the first object in the list is missing", "Berlin", business.get(3).getServiceLocation());
-        assertEquals("Photo of the first object in the list is missing", null, business.get(3).getPhoto());
+        assertEquals("First name of the first object in the list doesn't match", "Ada", business.get(0).getFName());
+        assertEquals("Last name of the first object in the list doesn't match", "Polkanova", business.get(0).getLName());
+        assertEquals("Description of the first object in the list doesn't match", "Hi, I'm Ada, the dog", business.get(0).getDescription());
+        assertEquals("Location of the first object in the list doesn't match", "Berlin", business.get(0).getServiceLocation());
+        assertEquals("Photo of the first object in the list doesn't match", null, business.get(0).getPhoto());
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -58,35 +84,36 @@ public class BusinessServiceTest {
 
         assertNotNull("business profile could not be saved", savedBusiness);
 
-        assertEquals("First name couldn't be saved", "Ada", savedBusiness.getFName());
-        assertEquals("Last name couldn't be saved", "Polkanova", savedBusiness.getLName());
-        assertEquals("Email name couldn't be saved", "dogsledging@doggy.de", savedBusiness.getEMail());
-        assertEquals("Phone name couldn't be saved", "017668558497", savedBusiness.getPhone());
-        assertEquals("Description couldn't be saved", "Hi, I'm Ada, the dog", savedBusiness.getDescription());
-        assertEquals("Location couldn't be saved", "berlin", savedBusiness.getServiceLocation());
-        assertEquals("Username couldn't be saved", "polkaner", savedBusiness.getUsername());
+        assertEquals("First name doesn't match", "Ada", savedBusiness.getFName());
+        assertEquals("Last name doesn't match", "Polkanova", savedBusiness.getLName());
+        assertEquals("Email name doesn't match", "dogsledging@doggy.de", savedBusiness.getEMail());
+        assertEquals("Phone name doesn't match", "017668558497", savedBusiness.getPhone());
+        assertEquals("Description doesn't match", "Hi, I'm Ada, the dog", savedBusiness.getDescription());
+        assertEquals("Location doesn't match", "berlin", savedBusiness.getServiceLocation());
+        assertEquals("Username doesn't match", "polkaner", savedBusiness.getUsername());
     }
 
     @Test(expected = EntityNotUniqueException.class)
     public void saveNewlyCreatedBusinessProfileEmailAlreadyExistsTest() {
         BusinessPostDto businessNew = mockBusinessNew();
-        businessService.saveNewlyCreatedBusinessProfile(businessNew);
+        Business savedBusiness1 = businessService.saveNewlyCreatedBusinessProfile(businessNew);
+        Business savedBusiness2 = businessService.saveNewlyCreatedBusinessProfile(businessNew);
     }
 
     @Test
     public void retrieveBusinessByIdTest() {
-        Long id = 5L;
+        Long id = testBusiness.getId();
         Business retrievedBusiness = businessService.retrieveBusinessById(id);
 
-        assertNotNull("No business profile with given id could be retrieved from the business repository", retrievedBusiness);
+        assertNotNull("No matching business profile with given id could be retrieved from the business repository", retrievedBusiness);
 
-        assertEquals("First name is missing", "Ada", retrievedBusiness.getFName());
-        assertEquals("Last name is missing", "Polkanova", retrievedBusiness.getLName());
-        assertEquals("Email is missing", "dogsledging@doggy.de", retrievedBusiness.getEMail());
-        assertEquals("Phone is missing", "017668558497", retrievedBusiness.getPhone());
-        assertEquals("Description is missing", "Hi, I'm Ada, the dog", retrievedBusiness.getDescription());
-        assertEquals("Location is missing", "berlin", retrievedBusiness.getServiceLocation());
-        assertEquals("Username is missing", "polkaner", retrievedBusiness.getUsername());
+        assertEquals("First name doesn't match", "Ada", retrievedBusiness.getFName());
+        assertEquals("Last name doesn't match", "Polkanova", retrievedBusiness.getLName());
+        assertEquals("Email doesn't match", "dogsledging@doggy-berlin.de", retrievedBusiness.getEMail());
+        assertEquals("Phone doesn't match", "017668558497", retrievedBusiness.getPhone());
+        assertEquals("Description doesn't match", "Hi, I'm Ada, the dog", retrievedBusiness.getDescription());
+        assertEquals("Location doesn't match", "Berlin", retrievedBusiness.getServiceLocation());
+        assertEquals("Username doesn't match", "polkaner", retrievedBusiness.getUsername());
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -96,38 +123,33 @@ public class BusinessServiceTest {
     }
 
     @Test
-    public void savePartiallyUpdatedBusinessProfileTest(){
-        Long id = 4L;
-
+    public void savePartiallyUpdatedBusinessProfileTest() {
+        Long id = testBusiness.getId();
         BusinessUpdatePhotoDto businessUpdatePhotoDto = mockBusinessPhotoUpdate();
-
         Business updBusiness = businessService.savePartiallyUpdatedBusinessProfile(id, businessUpdatePhotoDto);
 
         assertNotNull("Updated business couldn't be saved", updBusiness);
-        assertEquals("Updated photo couldn't be saved", "97d90e9f4692e6a.png", updBusiness.getPhoto());
+        assertEquals("Updated photo doesn't match", "97d90e9f4692e6a.png", updBusiness.getPhoto());
 
     }
 
 
     @Test
     public void saveUpdatedBusinessProfileTest() {
-        Long id = 4L;
-
+        Long id = testBusiness.getId();
         BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
-
         Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
 
         assertNotNull("Updated business couldn't be saved", updBusiness);
 
-        assertEquals("Updated first name couldn't be saved", "Adelaida", updBusiness.getFName());
-        assertEquals("Updated last name couldn't be saved", "Polkanova", updBusiness.getLName());
-        assertEquals("Updated email couldn't be saved", "polkan@dogsrgods.com", updBusiness.getEMail());
-        assertEquals("Updated phone couldn't be saved", "017628834523", updBusiness.getPhone());
-        assertEquals("Updated description couldn't be saved", "Hi, I'm Ada, the hairiest guide in Berlin", updBusiness.getDescription());
-        assertEquals("Updated service location couldn't be saved", "Charlottenburg", updBusiness.getServiceLocation());
-        assertEquals("Updated username couldn't be saved", "polkan", updBusiness.getUsername());
-        assertEquals("Updated photo couldn't be saved", "97d90e9f4692e6a.png", updBusiness.getPhoto());
-        //no logic for updating password yet. Perhaps, it should be a separate update procedure. It will be added after introducing general authentification logic.
+        assertEquals("Updated first name doesn't match", "Adelaida", updBusiness.getFName());
+        assertEquals("Updated last name doesn't match", "Polkanova", updBusiness.getLName());
+        assertEquals("Updated email doesn't match", "polkan@dogsrgods.com", updBusiness.getEMail());
+        assertEquals("Updated phone doesn't match", "017628834523", updBusiness.getPhone());
+        assertEquals("Updated description doesn't match", "Hi, I'm Ada, the hairiest guide in Berlin", updBusiness.getDescription());
+        assertEquals("Updated service location doesn't match", "Charlottenburg", updBusiness.getServiceLocation());
+        assertEquals("Updated username doesn't match", "polkan", updBusiness.getUsername());
+        assertEquals("Updated photo doesn't match", "97d90e9f4692e6a.png", updBusiness.getPhoto());
 
     }
 
@@ -140,10 +162,11 @@ public class BusinessServiceTest {
 
     @Test(expected = EntityNotUniqueException.class)
     public void saveUpdatedBusinessProfileEmailAlreadyExistsTest() {
-        Long id = 4L;
+        Long id = testBusiness.getId();
         BusinessUpdateDto businessUpdateDto = mockBusinessUpdate();
 
-        Business updBusiness = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
+        Business updBusiness1 = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
+        Business updBusiness2 = businessService.saveUpdatedBusinessProfile(id, businessUpdateDto);
     }
 
     private BusinessPostDto mockBusinessNew() {
@@ -179,5 +202,19 @@ public class BusinessServiceTest {
         businessPhotoUpdate.setPhoto("97d90e9f4692e6a.png");
 
         return businessPhotoUpdate;
+    }
+
+    private Business mockBusiness() {
+        Business business = new Business();
+        business.setFName("Ada");
+        business.setLName("Polkanova");
+        business.setEMail("dogsledging@doggy-berlin.de");
+        business.setPhone("017668558497");
+        business.setDescription("Hi, I'm Ada, the dog");
+        business.setServiceLocation("Berlin");
+        business.setUsername("polkaner");
+        business.setPassword("bones");
+        business.setPhoto(null);
+        return business;
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface BusinessRepository extends JpaRepository<Business, Long> {
 
-    @Query("SELECT new de.berlin.lostberlin.model.business.client.BusinessShortDao (b.fName, b.lName, b.description, b.serviceLocation, b.photo)"+
+    @Query("SELECT new de.berlin.lostberlin.model.business.client.BusinessShortDao (b.id, b.fName, b.lName, b.description, b.serviceLocation, b.photo)"+
             "from Business b where b.serviceLocation = :serviceLocation")
     List<BusinessShortDao> getShortBusinessProfiles(@NotNull @Param("serviceLocation") String serviceLocation);
 

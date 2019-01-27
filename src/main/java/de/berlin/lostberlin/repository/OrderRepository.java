@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, String> {
 
-    @Query("SELECT new de.berlin.lostberlin.model.order.client.OrderStatusDao (o.name, o.date, o.time, o.businessId, o.status)"+
+    @Query("SELECT new de.berlin.lostberlin.model.order.client.OrderStatusDao (o.name, o.date, o.time, o.businessId, o.status, o.orderNr)"+
             "from Order o where o.orderNr = :orderNr")
     OrderStatusDao getOrderStatus(@NotNull @Param("orderNr") String orderNr);
 

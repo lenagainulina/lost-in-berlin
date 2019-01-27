@@ -27,7 +27,7 @@ public class BusinessServiceImpl implements BusinessService {
     public List<BusinessShortDao> retrieveBusinessByLocation(String serviceLocation) {
         List<BusinessShortDao> businessShortDaoList = businessRepo.getShortBusinessProfiles(serviceLocation);
         if (businessShortDaoList.isEmpty()) {
-            throw new ResourceNotFoundException("No matches for given location");
+            throw new ResourceNotFoundException("No matches for given location "+ serviceLocation);
         }
         return businessShortDaoList;
     }

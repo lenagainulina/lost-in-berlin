@@ -1,4 +1,5 @@
 FROM openjdk:8
-COPY ./out/production/DockerJavaApp/ /tmp
+ADD Main.jar Main.jar
 WORKDIR /tmp
-ENTRYPOINT ["java","Main"]
+EXPOSE 8080
+ENTRYPOINT ["java","LostberlinApplication"]

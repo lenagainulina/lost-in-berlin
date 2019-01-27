@@ -15,7 +15,9 @@ services:
 
 #    Image, we want to build container from
     image: mysql:5.7
-
+# Limit the logfilesize of the container
+    log_opt:
+      max-size: 50m
     volumes:
       - ./db/mysql-datadir:/var/lib/mysql
 # THis means that in the same dir, where docker-compose is located, will be created db/mysql-datadir and then mounted into container's 
@@ -28,7 +30,9 @@ services:
       - MYSQL_USER=lost
       - MYSQL_DATABASE=lostberlin
       - MYSQL_PASSWORD=lostberlin
-
+# Automatically start and then restart the container unless it is explicitly stopped or Docker itself is stopped or restarted.    
+    restart: unless-stopped
+    
 #   Ports we want to bind our container with host OS
     ports:
       - "3306:3306"
@@ -42,6 +46,9 @@ services:
 #   like: docker logs -f db
     container_name: app
     image: lenagainulina/lostberlin:latest
+# Limit the logfilesize of the container
+    log_opt:
+      max-size: 50m
 #   Ports we want to bind our container with host OS
     ports:
       - "8080:8080"
@@ -53,7 +60,9 @@ services:
       - MYSQL_DATABASE=lostberlin
       ## - START_DELAY=20000   - if possible and needed, use this to make sure that db starts and open
 
-#   This container (web) will start only, after "db" starts.
+# Automatically start and then restart the container unless it is explicitly stopped or Docker itself is stopped or restarted.    
+    restart: unless-stopped
+#   This container (web) will start only after "db" starts.
 #   There is no reason to start web, if db is not started
     depends_on:
       - db

@@ -4,12 +4,14 @@ import de.berlin.lostberlin.exception.OperationForbiddenException;
 import de.berlin.lostberlin.exception.ResourceConflictException;
 import de.berlin.lostberlin.exception.ResourceNotFoundException;
 import de.berlin.lostberlin.exception.ResourceNotSavedException;
+import de.berlin.lostberlin.model.business.persistence.Business;
 import de.berlin.lostberlin.model.order.client.OrderFullDao;
 import de.berlin.lostberlin.model.order.client.OrderPostDto;
 import de.berlin.lostberlin.model.order.client.OrderShortDao;
 import de.berlin.lostberlin.model.order.client.OrderStatusDao;
 import de.berlin.lostberlin.model.order.persistence.ChosenBusiness;
 import de.berlin.lostberlin.model.order.persistence.Order;
+import de.berlin.lostberlin.model.order.persistence.StatusTypes;
 import de.berlin.lostberlin.repository.BusinessRepository;
 import de.berlin.lostberlin.repository.ChosenBusinessRepository;
 import de.berlin.lostberlin.repository.OrderRepository;
@@ -19,54 +21,82 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.junit4.SpringRunner;
-import de.berlin.lostberlin.model.order.persistence.StatusTypes;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static de.berlin.lostberlin.model.order.persistence.StatusTypes.CONFIRMED;
+import static de.berlin.lostberlin.model.order.persistence.StatusTypes.PENDING;
 import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class OrderServiceTest {
-    @Autowired
-    private OrderRepository orderRepo;
-    @Autowired
-    private BusinessRepository businessRepo;
-    @Autowired
-    private ChosenBusinessRepository chosenBusinessRepo;
+
+    @TestConfiguration
+    @EnableJpaAuditing
+    public static class OrderServiceTestConfiguration {
+        @Autowired
+        private OrderRepository orderRepo;
+        @Autowired
+        private BusinessRepository businessRepo;
+        @Autowired
+        private ChosenBusinessRepository chosenBusinessRepo;
+
+        @MockBean
+        private MailService mailService;
+
+        @Bean
+        public OrderService createOrderService() {
+            return new OrderServiceImpl(orderRepo, businessRepo, chosenBusinessRepo, mailService);
+        }
+    }
+
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
     @MockBean
-    private MailService mailService;
+    private BusinessRepository businessRepository;
+
+    private Order testOrder;
+
 
     @Before
     public void setUp() {
-        orderService = new OrderServiceImpl(orderRepo, businessRepo, chosenBusinessRepo, mailService);
+        testOrder = mockOrder();
+        entityManager.persist(testOrder);
     }
 
     @Test
     public void retrieveAllOrdersTest() {
-        orderService.retrieveAllOrders();
-        List<Order> orderList = orderRepo.findAll();
+        List<Order> orderList = orderService.retrieveAllOrders();
 
         assertFalse("List of order is empty", orderList.isEmpty());
 
-        assertEquals("Name of the first object in the list is missing", "Lena", orderList.get(8).getName());
-        assertEquals("Phone of the first object in the list is missing", "017668558497", orderList.get(8).getPhone());
-        assertEquals("Email of the first object in the list is missing", "aoneko@gmx.de", orderList.get(8).getEMail());
-        assertEquals("Date of the first object in the list is missing", LocalDate.of(2018, 12, 12), orderList.get(8).getDate());
-        assertEquals("Time of the first object in the list is missing", "around 1 p.m.", orderList.get(8).getTime());
-        assertEquals("Participants number of the first object in the list is missing", 2L, orderList.get(8).getParticipantsNr());
-        assertEquals("Description of the first object in the list is missing", "Hi, I'm Lena, will you be my guide?", orderList.get(8).getDescription());
+        assertEquals("Name of the first object in the list doesn't match", "Lena", orderList.get(0).getName());
+        assertEquals("Phone of the first object in the list doesn't match", "017668558497", orderList.get(0).getPhone());
+        assertEquals("Email of the first object in the list doesn't match", "aoneko@gmx.de", orderList.get(0).getEMail());
+        assertEquals("Date of the first object in the list doesn't match", LocalDate.of(2018, 12, 12), orderList.get(0).getDate());
+        assertEquals("Time of the first object in the list doesn't match", "around 1 p.m.", orderList.get(0).getTime());
+        assertEquals("Participants number of the first object in the list doesn't match", 2L, orderList.get(0).getParticipantsNr());
+        assertEquals("Description of the first object in the list doesn't match", "Hi, I'm Lena, will you be my guide?", orderList.get(0).getDescription());
     }
 
-    @Ignore //run only after database was dropped
+    @Ignore //run with commented @Before
     @Test(expected = ResourceNotFoundException.class)
     public void retrieveAllOrdersNotFoundTest() {
         orderService.retrieveAllOrders();
@@ -74,17 +104,18 @@ public class OrderServiceTest {
 
     @Test
     public void retrieveOrdersByBusinessIdTest() {
-        Long id = 1L;
-
+        Long[] chosenBusinessIds = {1L, 2L, 3L};
+        orderService.saveChosenBusinesses(testOrder, chosenBusinessIds);
+        Long id = testOrder.getBusinessId();
         List<OrderShortDao> orderList = orderService.retrieveOrdersByBusinessId(id);
 
         assertFalse("List of order is empty", orderList.isEmpty());
 
-        assertEquals("Name of the first object in the list is missing", "Lena", orderList.get(3).getName());
-        assertEquals("Date of the first object in the list is missing", LocalDate.of(2018, 12, 12), orderList.get(3).getDate());
-        assertEquals("Time of the first object in the list is missing", "around 1 p.m.", orderList.get(3).getTime());
-        assertEquals("Participants number of the first object in the list is missing", 2L, orderList.get(3).getParticipantsNr());
-        assertEquals("Description of the first object in the list is missing", "Hi, I'm Lena, will you be my guide?", orderList.get(3).getDescription());
+        assertEquals("Name of the first object in the list doesn't match", "Lena", orderList.get(0).getName());
+        assertEquals("Date of the first object in the list doesn't match", LocalDate.of(2018, 12, 12), orderList.get(0).getDate());
+        assertEquals("Time of the first object in the list doesn't match", "around 1 p.m.", orderList.get(0).getTime());
+        assertEquals("Participants number of the first object in the list doesn't match", 2L, orderList.get(0).getParticipantsNr());
+        assertEquals("Description of the first object in the list doesn't match", "Hi, I'm Lena, will you be my guide?", orderList.get(0).getDescription());
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -95,16 +126,16 @@ public class OrderServiceTest {
 
     @Test
     public void retrieveOrderByOrderNrTest() {
-        String orderNr = "2018-11_00452";
-
+        String orderNr = testOrder.getOrderNr();
+        Long id = testOrder.getBusinessId();
         OrderStatusDao orderStatus = orderService.retrieveOrderByOrderNr(orderNr);
-        StatusTypes pending = StatusTypes.PENDING;
+        StatusTypes confirmed = CONFIRMED;
 
-        assertEquals("Name is missing", "Lena", orderStatus.getName());
-        assertEquals("Date is missing", LocalDate.of(2018, 12, 12), orderStatus.getDate());
-        assertEquals("Time is missing", "around 1 p.m.", orderStatus.getTime());
-        assertEquals("Business id is missing", null, orderStatus.getBusinessId());
-        assertEquals("Status is missing", pending, orderStatus.getStatus());
+        assertEquals("Name doesn't match", "Lena", orderStatus.getName());
+        assertEquals("Date doesn't match", LocalDate.of(2018, 12, 12), orderStatus.getDate());
+        assertEquals("Time doesn't match", "around 1 p.m.", orderStatus.getTime());
+        assertEquals("Business id doesn't match", id, orderStatus.getBusinessId());
+        assertEquals("Status doesn't match", confirmed, orderStatus.getStatus());
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -120,76 +151,85 @@ public class OrderServiceTest {
 
         assertNotNull("order profile could not be saved", savedOrder);
 
-        assertEquals("Name couldn't be saved", "Lena", savedOrder.getName());
-        assertEquals("Phone couldn't be saved", "017668558497", savedOrder.getPhone());
-        assertEquals("Email couldn't be saved", "aoneko@gmx.de", savedOrder.getEMail());
-        assertEquals("Date couldn't be saved", LocalDate.of(2018, 12, 12), savedOrder.getDate());
-        assertEquals("Time couldn't be saved", "around 1 p.m.", savedOrder.getTime());
-        assertEquals("Participants number couldn't be saved", 2L, savedOrder.getParticipantsNr());
-        assertEquals("Description couldn't be saved", "Hi, I'm Lena, will you be my guide?", savedOrder.getDescription());
+        assertEquals("Name doesn't match", "Lena", savedOrder.getName());
+        assertEquals("Phone doesn't match", "017668558497", savedOrder.getPhone());
+        assertEquals("Email doesn't match", "aoneko@gmx.de", savedOrder.getEMail());
+        assertEquals("Date doesn't match", LocalDate.of(2018, 12, 12), savedOrder.getDate());
+        assertEquals("Time doesn't match", "around 1 p.m.", savedOrder.getTime());
+        assertEquals("Participants number doesn't match", 2L, savedOrder.getParticipantsNr());
+        assertEquals("Description doesn't match", "Hi, I'm Lena, will you be my guide?", savedOrder.getDescription());
     }
 
-    @Ignore // Run with deactivated DB
+    @Ignore //Run with deactivated DB
     @Test(expected = ResourceNotSavedException.class)
     public void saveOrderProfileNotSavedTest() {
         OrderPostDto orderNew = mockOrderNew();
         orderService.saveOrderProfile(orderNew);
     }
 
+
     @Test
     public void saveChosenBusinessesTest() {
-        OrderPostDto orderNew = mockOrderNew();
-        ChosenBusiness savedBusiness = orderService.saveChosenBusinesses(orderNew);
+        Long[] chosenBusinessIds = {1L, 2L, 3L};
+        ChosenBusiness savedBusiness = orderService.saveChosenBusinesses(testOrder, chosenBusinessIds);
 
         assertFalse(savedBusiness.getOrderNr().isEmpty());
-        assertFalse(savedBusiness.getBusinessId().equals(null));
+        assertNotNull(savedBusiness.getBusinessId());
     }
 
     @Ignore // Run with deactivated DB
     @Test(expected = ResourceNotSavedException.class)
-    public void aveChosenBusinessesNotSavedTest() {
-        OrderPostDto orderNew = mockOrderNew();
-        orderService.saveChosenBusinesses(orderNew);
+    public void saveChosenBusinessesNotSavedTest() {
+        Order testOrder = mockOrder();
+        entityManager.persist(testOrder);
+        Long[] chosenBusinessIds = {1L, 2L, 3L};
+        orderService.saveChosenBusinesses(testOrder, chosenBusinessIds);
     }
 
     @Test
     public void updateOrderStatusToPendingTest() {
-        String orderNr = "2018-11_00502";
+        String orderNr = testOrder.getOrderNr();
         String status = "PENDING";
         Long businessId = null;
-
-        StatusTypes pending = StatusTypes.PENDING;
-
+        StatusTypes pending = PENDING;
         orderService.updateOrderStatus(orderNr, status, businessId);
-        Optional<Order> order = orderRepo.findById(orderNr);
+        OrderStatusDao order = orderService.retrieveOrderByOrderNr(orderNr);
 
-        assertEquals("Status couldn't be updated", pending, order.get().getStatus());
-        assertEquals("Business id wasn't set to null", null, order.get().getBusinessId());
+        assertEquals("Status doesn't match", pending, order.getStatus());
+        assertEquals("Business id doesn't match", null, order.getBusinessId());
     }
 
     @Test
     public void updateOrderStatusToClosedTest() {
-        String orderNr = "2018-11_00402";
+        String orderNr = testOrder.getOrderNr();
         String status = "CLOSED";
-        Long businessId = 1L;
-
         StatusTypes closed = StatusTypes.CLOSED;
+        Long businessId =testOrder.getBusinessId();
+        Business business = mockBusiness();
+
+        given(businessRepository.findById(businessId)).willReturn(Optional.ofNullable(business));
 
         orderService.updateOrderStatus(orderNr, status, businessId);
-        Optional<Order> order = orderRepo.findById(orderNr);
+        OrderStatusDao order = orderService.retrieveOrderByOrderNr(orderNr);
 
-        assertEquals("Status couldn't be updated", closed, order.get().getStatus());
-        assertEquals("Business id couldn't be updated", businessId, order.get().getBusinessId());
+        assertEquals("Status doesn't match", closed, order.getStatus());
+        assertEquals("Business id doesn't match", businessId, order.getBusinessId());
     }
 
     @Test(expected = OperationForbiddenException.class)
     public void updateOrderStatusToClosedForbiddenTest() {
-        String orderNr = "2018-11_00402";
+        Order testOrder = mockOrder();
+        entityManager.persist(testOrder);
+        String orderNr = testOrder.getOrderNr();
+        Long businessId = testOrder.getBusinessId();
+        StatusTypes closed = StatusTypes.CLOSED;
+        testOrder.setStatus(closed);
         String status = "CLOSED";
-        Long businessId = 1L;
+        Business business = mockBusiness();
+
+        given(businessRepository.findById(1L)).willReturn(Optional.ofNullable(business));
 
         orderService.updateOrderStatus(orderNr, status, businessId);
-
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -203,23 +243,28 @@ public class OrderServiceTest {
 
     @Test
     public void confirmOrderTest() {
-        String orderNr = "2018-11_00502";
+        testOrder.setBusinessId(null);
+        StatusTypes pending = StatusTypes.PENDING;
+        testOrder.setStatus(pending);
+        String orderNr = testOrder.getOrderNr();
         String status = "CONFIRMED";
+        StatusTypes confirmed = StatusTypes.CONFIRMED;
         Long businessId = 1L;
 
-        StatusTypes confirmed = StatusTypes.CONFIRMED;
+        Business business = mockBusiness();
+        given(businessRepository.findById(1L)).willReturn(Optional.ofNullable(business));
 
         OrderFullDao confirmedOrder = orderService.confirmOrder(orderNr, status, businessId);
 
-        assertEquals("Status couldn't be updated", confirmed, confirmedOrder.getStatus());
-        assertEquals("Business id couldn't be updated", businessId, confirmedOrder.getBusinessId());
+        assertEquals("Status doesn't match", confirmed, confirmedOrder.getStatus());
+        assertEquals("Business id doesn't match", businessId, confirmedOrder.getBusinessId());
     }
 
     @Test(expected = ResourceNotFoundException.class)
     public void confirmOrderNotFoundTest() {
         String orderNr = "2018-11_00001";
         String status = "CONFIRMED";
-        Long businessId = 1L;
+        Long businessId = testOrder.getBusinessId();
 
         orderService.confirmOrder(orderNr, status, businessId);
     }
@@ -229,14 +274,14 @@ public class OrderServiceTest {
     public void confirmOrderNotSavedTest() {
         String orderNr = "2018-11_00502";
         String status = "CONFIRMED";
-        Long businessId = 1L;
+        Long businessId = testOrder.getBusinessId();
 
         orderService.confirmOrder(orderNr, status, businessId);
     }
 
     @Test(expected = ResourceConflictException.class)
     public void confirmOrderConflictTest() {
-        String orderNr = "2018-11_00502";
+        String orderNr = testOrder.getOrderNr();
         String status = "CONFIRMED";
         Long businessId = 2L;
 
@@ -246,26 +291,25 @@ public class OrderServiceTest {
 
     @Test
     public void retrieveFullOrderProfileTest() {
-        String orderNr = "2018-11_00502";
-        String status = "CONFIRMED";
-        Long businessId = 1L;
-
+        String orderNr = testOrder.getOrderNr();
+        String status = testOrder.getStatus().toString();
+        Long businessId = testOrder.getBusinessId();
         StatusTypes confirmed = StatusTypes.CONFIRMED;
 
         OrderFullDao fullOrderDetails = orderService.retrieveFullOrderProfile(orderNr, status, businessId);
 
         assertNotNull("order profile could not be retrieved", fullOrderDetails);
 
-        assertEquals("Name is missing", "Lena", fullOrderDetails.getName());
-        assertEquals("Phone is missing", "017668558497", fullOrderDetails.getPhone());
-        assertEquals("Email is missing", "aoneko@gmx.de", fullOrderDetails.getEMail());
-        assertEquals("Date is missing", LocalDate.of(2018, 12, 12), fullOrderDetails.getDate());
-        assertEquals("Time is missing", "around 1 p.m.", fullOrderDetails.getTime());
-        assertEquals("Participants number is missing", 2L, fullOrderDetails.getParticipantsNr());
-        assertEquals("Description is missing", "Hi, I'm Lena, will you be my guide?", fullOrderDetails.getDescription());
-        assertEquals("Business id is missing", businessId, fullOrderDetails.getBusinessId());
-        assertEquals("Status is missing", confirmed, fullOrderDetails.getStatus());
-        assertEquals("Order number is missing", orderNr, fullOrderDetails.getOrderNr());
+        assertEquals("Name doesn't match", "Lena", fullOrderDetails.getName());
+        assertEquals("Phone doesn't match", "017668558497", fullOrderDetails.getPhone());
+        assertEquals("Email doesn't match", "aoneko@gmx.de", fullOrderDetails.getEMail());
+        assertEquals("Date doesn't match", LocalDate.of(2018, 12, 12), fullOrderDetails.getDate());
+        assertEquals("Time doesn't match", "around 1 p.m.", fullOrderDetails.getTime());
+        assertEquals("Participants number doesn't match", 2L, fullOrderDetails.getParticipantsNr());
+        assertEquals("Description doesn't match", "Hi, I'm Lena, will you be my guide?", fullOrderDetails.getDescription());
+        assertEquals("Business id doesn't match", businessId, fullOrderDetails.getBusinessId());
+        assertEquals("Status doesn't match", confirmed, fullOrderDetails.getStatus());
+        assertEquals("Order number doesn't match", orderNr, fullOrderDetails.getOrderNr());
     }
 
     private OrderPostDto mockOrderNew() {
@@ -280,5 +324,35 @@ public class OrderServiceTest {
         orderNew.setParticipantsNr(2L);
         orderNew.setDescription("Hi, I'm Lena, will you be my guide?");
         return orderNew;
+    }
+
+    private Order mockOrder() {
+        Order order = new Order();
+        StatusTypes CONFIRMED = StatusTypes.CONFIRMED;
+        order.setBusinessId(1L);
+        order.setStatus(CONFIRMED);
+        order.setName(mockOrderNew().getName());
+        order.setPhone(mockOrderNew().getPhone());
+        order.setEMail(mockOrderNew().getEMail());
+        order.setDate(mockOrderNew().getDate());
+        order.setTime(mockOrderNew().getTime());
+        order.setParticipantsNr(mockOrderNew().getParticipantsNr());
+        order.setDescription(mockOrderNew().getDescription());
+        return order;
+    }
+
+    private Business mockBusiness() {
+        Business business = new Business();
+        business.setId(1L);
+        business.setFName("Ada");
+        business.setLName("Polkanova");
+        business.setEMail("dogsledging@doggy.de");
+        business.setPhone("017668558497");
+        business.setDescription("Hi, I'm Ada, the dog");
+        business.setServiceLocation("berlin");
+        business.setUsername("polkaner");
+        business.setPassword("bones");
+        business.setPhoto(null);
+        return business;
     }
 }

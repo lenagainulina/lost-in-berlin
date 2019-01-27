@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BusinessShortDao {
+    private Long id;
+
     private String fName;
 
     private String lName;

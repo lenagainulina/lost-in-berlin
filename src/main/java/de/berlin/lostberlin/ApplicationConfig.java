@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableConfigurationProperties(FileStorageConfiguration.class)
 public class ApplicationConfig {
 
-    /*@Bean
+   /* @Bean
     CommandLineRunner init(FileService fileService) {
         return (args) -> {
             fileService.deleteAllFiles();

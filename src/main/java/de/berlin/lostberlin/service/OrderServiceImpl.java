@@ -86,9 +86,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ChosenBusiness saveChosenBusinesses(OrderPostDto orderProfile) {
-        Order order = saveOrderProfile(orderProfile);
-        Long[] chosenBusinessIds = orderProfile.getChosenBusinessIds();
+    public ChosenBusiness saveChosenBusinesses(Order order, Long[] chosenBusinessIds) {
         ChosenBusiness chosenBusiness = null;
         for (Long id : chosenBusinessIds) {
             chosenBusiness = new ChosenBusiness();

@@ -21,4 +21,5 @@ public class OrderStatusDao {
     private String time;
     private Long businessId;
     private Enum status;
+    private String orderNr;
 }

@@ -1,0 +1,59 @@
+#docker-compose version
+version: '3.3'
+
+#Services we configure to run
+services:
+
+# Database service name.
+# This name is used to refer this "service" inside of this docker-compose.yml configuration file
+# When docker-compose will be started, db container will be visible to other containers of this file by name "db"
+  db:
+
+#   By this name db container will be accessible, using docker commands, intead of container name,
+#   like, docker logs -f db
+    container_name: db
+
+#    Image, we want to build container from
+    image: mysql:5.7
+
+    volumes:
+      - ./db/mysql-datadir:/var/lib/mysql
+# THis means that in the same dir, where docker-compose is located, will be created db/mysql-datadir and then mounted into container's 
+# /var/lib/mysql. DONT FORGET to add db/mysql-datadir into .gitignore !!!
+
+
+#   Environment variables we pass inside of the container, like JAVA_HOME
+    environment:
+      - MYSQL_ROOT_PASSWORD=r00t
+      - MYSQL_USER=lost
+      - MYSQL_DATABASE=lostberlin
+      - MYSQL_PASSWORD=lostberlin
+
+#   Ports we want to bind our container with host OS
+    ports:
+      - "3306:3306"
+
+# Java application service name.
+# This name is used to refer this "service" inside of this docker-compose.yml configuration file
+# When docker-compose will be started, web container will be visible to other containers of this file by name "web"
+  web:
+
+#   By this name "web" container will be accessible, using docker commands, instead of container name,
+#   like: docker logs -f db
+    container_name: app
+    image: lenagainulina/lostberlin:latest
+#   Ports we want to bind our container with host OS
+    ports:
+      - "8080:8080"
+
+#   Environment variables we pass inside of the container, like JAVA_HOME
+    environment:
+      - MYSQL_ROOT_PASSWORD=r00t
+      - MYSQL_USER=root
+      - MYSQL_DATABASE=lostberlin
+      ## - START_DELAY=20000   - if possible and needed, use this to make sure that db starts and open
+
+#   This container (web) will start only, after "db" starts.
+#   There is no reason to start web, if db is not started
+    depends_on:
+      - db

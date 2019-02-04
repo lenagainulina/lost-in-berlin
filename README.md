@@ -15,9 +15,6 @@ Enter a basic description of your order (date, time and number of participants),
 
 See all orders and their status (active/on hold) in a list. Be the first one to click on active orders to get client’s contact information.
 
-## MVP 
-Send request to the system and save it there.
-
 ## Workflow 
 ### Client
 1. Search 

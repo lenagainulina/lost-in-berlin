@@ -26,3 +26,6 @@
 
 # Sendgrid Properties
 sendgrid.properties
+
+# Docker-compose
+./db/mysql-datadir
